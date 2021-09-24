@@ -1,0 +1,33 @@
+!!qlikpe.dbloadgen.model.workload.DbLoadgenConnectionList
+connections:
+   - name: h2mem
+     databaseType: h2
+     jdbcDriver: org.h2.Driver
+     url: jdbc:h2:mem:testdb
+     username: sa
+     password: sa
+   - name: mysqltest
+     databaseType: mysql
+     jdbcDriver: com.mysql.cj.jdbc.Driver
+     url: jdbc:mysql://localhost:3306
+     username: root
+     password: attunity
+   - name: postgrestest
+     databaseType: postgres
+     jdbcDriver: org.postgresql.Driver
+     url: jdbc:postgresql://localhost:5432/qlikdb
+     username: qlik
+     password: attunity
+   - name: sqltest
+     databaseType: sqlserver
+     jdbcDriver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+     url: jdbc:sqlserver://localhost:1433
+     username: sa
+     password: AttunityAdmin123
+   - name: oratest
+     databaseType: oracle
+     jdbcDriver: oracle.jdbc.driver.OracleDriver
+     url: jdbc:oracle:thin:@localhost:1521/XEPDB1
+     username: c##attunity
+     password: attunity
+

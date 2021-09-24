@@ -1,0 +1,91 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.clearing {
+    height: 1px;
+    line-height: 1px;
+    font-size: 1px;
+    clear: both;
+}
+
+table.overview {
+    width: 33%;
+}
+
+.hidden {
+    display: none;
+}
+
+.error {
+    color: red;
+}
+
+input[type=text].error {
+    border-color: red;
+}
+
+#header-title-line {
+    height: 4em;
+}
+
+#logo {
+    height: 3em;
+    padding-bottom: 0.5em;
+}
+
+#title {
+    line-height: 7em;
+}
+
+#title h1 {
+    vertical-align: bottom;
+    display: inline-block;
+}
+
+#filter {
+    border: 1px solid #444;
+    color: white;
+    background-color: #222;
+}
+
+#filter:focus {
+    outline: #00f0fe auto 2px;
+}
+
+#loadgenVersion {
+    color: #888;
+    font-size: 0.8em;
+    margin-top: -1.8em;
+    float: right;
+}
+
+#errorHeader {
+    font-size: 1.2em;
+}
+
+#errorMessage {
+    font-weight: bold;
+    color: #eb3474;
+}
+
+#stackTraceTitle {
+    padding-top: 2em;
+    font-weight: bold;
+    color: #999;
+}
+
+#stackTrace {
+    font-family: monospace;
+    color: #999;
+}

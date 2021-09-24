@@ -1,0 +1,45 @@
+server:
+  port: ${SERVER_PORT:9090}
+  servlet:
+    context-path: /
+  forward-headers-strategy: NATIVE
+  error:
+    whitelabel:
+      enabled: false
+
+spring:
+  security:
+    user:
+      name: admin
+      password: admin
+      roles: USER
+  jmx:
+    enabled: true
+    default_domain: Loadgen
+  jackson:
+    deserialization:
+      fail_on_unknown_properties: false
+      read_unknown_enum_values_as_null: true
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
+  h2:
+    console:
+      enabled: true
+      path: /h2
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure.include: "*"
+  server:
+    port: 9090
+
+loadgen.monitor:
+  clientId: Loadgen
+
+
+

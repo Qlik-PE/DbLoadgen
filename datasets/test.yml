@@ -1,0 +1,27 @@
+!!qlikpe.dbloadgen.model.workload.WorkloadConfig
+dataset: test
+schema: myschema
+duration: 1
+workerThreads: 2
+preloadThreads: 2
+preloadBatchSize: 10
+workerBatchSize: 5
+workerBatchSleep: 50
+workerThreadSleep: 0
+allTablesAllThreads: true
+operationPct:
+   insert: 25
+   update: 50
+   delete: 25
+tables:
+   - name: table1
+     preload: data
+     updateColumns: "G,W,L"
+   - name: table2
+     preload: data
+     updateColumns: "active,NAassoc"
+   - name: table3
+     preload: 50
+     updateColumns: "active"
+   - name: alltypes
+     preload: 50

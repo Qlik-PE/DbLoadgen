@@ -1,0 +1,47 @@
+!!qlikpe.dbloadgen.model.database.Table
+name: table2
+columns:
+  - name: franchID
+    type: varchar(64)
+    nullable: false
+    initializer: "RandomString,ALPHA,10"
+  - name: franchName
+    type: varchar(64)
+    nullable: true
+    initializer: "RandomString,NUMERIC,24"
+  - name: active
+    type: varchar(64)
+    nullable: true
+    initializer: "Pattern,####-####"
+  - name: NAassoc
+    type: varchar(64)
+    nullable: true
+    initializer: "RandomString,UPPER,2"
+keyColumns:
+  - franchID
+data: 
+  - "'ALT', 'Altoona Mountain City', 'N', ''"
+  - "'ANA', 'Los Angeles Angels of Anaheim', 'Y', ''"
+  - "'ARI', 'Arizona Diamondbacks', 'Y', ''"
+  - "'ATH', 'Philadelphia Athletics', 'N', 'PNA'"
+  - "'ATL', 'Atlanta Braves', 'Y', 'BNA'"
+  - "'BAL', 'Baltimore Orioles', 'Y', ''"
+  - "'BFB', 'Buffalo Bisons', 'N', ''"
+  - "'BFL', 'Buffalo Bisons', 'N', ''"
+  - "'BLC', 'Baltimore Canaries', 'NA', ''"
+  - "'BLO', 'Baltimore Orioles', 'N', ''"
+  - "'BLT', 'Baltimore Terrapins', 'N', ''"
+  - "'BLU', 'Baltimore Monumentals', 'N', ''"
+  - "'BNA', 'Boston Red Stockings', 'NA', 'ATL'"
+  - "'BOS', 'Boston Red Sox', 'Y', ''"
+  - "'BRA', 'Brooklyn Atlantics', 'NA', ''"
+  - "'BRD', 'Boston Reds', 'N', ''"
+  - "'BRG', 'Brooklyn Gladiators', 'N', ''"
+  - "'BRS', 'Boston Reds', 'N', ''"
+  - "'BTT', 'Brooklyn Tip-Tops', 'N', ''"
+  - "'BUF', 'Buffalo Bisons', 'N', ''"
+  - "'BWW', 'Brooklyn Wards Wonders', 'N', ''"
+  - "'CBK', 'Columbus Buckeyes', 'N', ''"
+  - "'CBL', 'Cleveland Blues', 'N', ''"
+  - "'CEN', 'Philadelphia Centennials', 'NA', ''"
+  - "'CFC', 'Cleveland Forest Citys', 'NA', ''"

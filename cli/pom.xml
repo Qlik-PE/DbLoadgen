@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>qlikpe.dbloadgen</groupId>
+        <artifactId>dbloadgen</artifactId>
+        <version>1.0</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>qlikpe.dbloadgen</groupId>
+    <artifactId>dbloadgencli</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>DbLoadgenCLI</name>
+
+    <description>Database load generation utility CLI</description>
+
+    <properties>
+    </properties>
+
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/net.sourceforge.argparse4j/argparse4j -->
+        <dependency>
+            <groupId>net.sourceforge.argparse4j</groupId>
+            <artifactId>argparse4j</artifactId>
+            <version>0.9.0</version>
+        </dependency>
+        <!-- common code shared across modules -->
+        <dependency>
+            <groupId>qlikpe.dbloadgen</groupId>
+            <artifactId>dbloadgencommon</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>qlikpe.dbloadgen.DbLoadgenCLI</mainClass>
+                        </manifest>
+                         <manifestEntries>
+                            <Multi-Release>true</Multi-Release>
+                         </manifestEntries>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

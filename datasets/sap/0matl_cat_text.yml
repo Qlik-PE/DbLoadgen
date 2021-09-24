@@ -1,0 +1,45 @@
+!!qlikpe.dbloadgen.model.database.Table
+name: 0matl_cat_text
+columns:
+   - name: LANGU
+     type: char(1)
+     nullable: true
+     initializer: "FixedString,1"
+   - name: KEY1
+     type: varchar(60)
+     nullable: false
+     initializer: "RandomString,ALPHANUMERIC,60"
+   - name: DATETO
+     type: date
+     nullable: true
+     initializer: "RandomDate"
+   - name: DATEFROM
+     type: date
+     nullable: true
+     initializer: "RandomDate"
+   - name: TXTSH
+     type: varchar(20)
+     nullable: true
+     initializer: "FixedString,20"
+   - name: TXTMD
+     type: varchar(40)
+     nullable: true
+     initializer: "FixedString,40"
+   - name: TXTLG
+     type: varchar(60)
+     nullable: true
+     initializer: "FixedString,60"
+keyColumns:
+   - KEY1
+data:
+   - "'E','99',NULL,NULL,'Singlematerial(ind','Singlematerial(industry)','Singlematerial(industry)'"
+   - "'E','00',NULL,NULL,'Singlematerial','Singlematerial','Singlematerial'"
+   - "'E','01',NULL,NULL,'Genericmaterial','Genericmaterial','Genericmaterial'"
+   - "'E','02',NULL,NULL,'Variant','Variant','Variant'"
+   - "'E','10',NULL,NULL,'Salesset','Salesset','Salesset'"
+   - "'E','11',NULL,NULL,'Prepack','Prepack','Prepack'"
+   - "'E','12',NULL,NULL,'Display','Display','Display'"
+   - "'E','20',NULL,NULL,'Materialgroupmater','Materialgroupmaterial','Materialgroupmaterial'"
+   - "'E','21',NULL,NULL,'Hierarchymaterial','Hierarchymaterial','Hierarchymaterial'"
+   - "'E','22',NULL,NULL,'Groupmaterial','Groupmaterial','Groupmaterial'"
+   - "'E','30',NULL,NULL,'Materialgrouprefer','Materialgroupreferencematerial','Materialgroupreferencematerial'"

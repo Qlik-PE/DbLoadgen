@@ -1,0 +1,55 @@
+!!qlikpe.dbloadgen.model.database.Table
+name: alltypes
+columns:
+  - name: column01
+    type: CHAR(10)
+  - name: column02
+    type: NCHAR(10)
+  - name: column03
+    type: VARCHAR(64)
+  - name: column04
+    type: NVARCHAR(64)
+  - name: column05
+    type: BOOLEAN
+  - name: column06
+    type: BYTES(10)
+  - name: column07
+    type: VARBYTES(64)
+  - name: column08
+    type: DATE
+  - name: column09
+    type: TIME
+  - name: column11
+    type: DATETIME
+  - name: column12
+    type: INT1
+  - name: column13
+    type: INT2
+  - name: column14
+    type: INT3
+  - name: column15
+    type: INT4
+  - name: column16
+    type: INT8
+  - name: column17
+    type: NUMERIC(10,2)
+  - name: column18
+    type: FLOAT
+  - name: column19
+    type: DOUBLE
+  - name: column20
+    type: UINT1
+  - name: column21
+    type: UINT2
+  - name: column22
+    type: UINT3
+  - name: column23
+    type: UINT4
+  - name: column24
+    type: UINT8
+  - name: column25
+    type: BLOB
+  - name: column26
+    type: CLOB
+  - name: column27
+    type: NCLOB
