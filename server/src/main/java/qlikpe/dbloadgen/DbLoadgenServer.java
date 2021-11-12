@@ -122,7 +122,7 @@ public class DbLoadgenServer {
       final var environment = event.getEnvironment();
 
       if (environment.containsProperty(SM_CONFIG_DIR)) {
-        Stream.of("loadgen", "global")
+        Stream.of("dbloadgen", "global")
             .map(name -> readProperties(environment, name))
             .filter(Objects::nonNull)
             .forEach(iniPropSource -> environment.getPropertySources()

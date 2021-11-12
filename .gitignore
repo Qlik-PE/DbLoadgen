@@ -14,5 +14,6 @@ target
 .vscode
 .env
 settings.xml
+dbloadgen.xml
 logs
 release

@@ -1,11 +1,5 @@
 !!qlikpe.dbloadgen.model.workload.DbLoadgenConnectionList
 connections:
-   - name: h2mem
-     databaseType: h2
-     jdbcDriver: org.h2.Driver
-     url: jdbc:h2:mem:testdb
-     username: sa
-     password: sa
    - name: mysqltest
      databaseType: mysql
      jdbcDriver: com.mysql.cj.jdbc.Driver

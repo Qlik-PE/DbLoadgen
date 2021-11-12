@@ -25,6 +25,7 @@ import java.util.List;
 @Getter
 @Setter
 public class WorkloadConfig {
+    private String name;
     private String dataset;
     private String schema;
     private OperationPct operationPct;

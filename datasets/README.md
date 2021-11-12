@@ -26,4 +26,5 @@ some of which are rather wide (over 100 columns).
 ## Dataset: test
 
 This is a simple dataset that is useful for smoke testing connections. Its simplicity  also 
-makes it useful for testing code changes against h2.
+makes it useful for testing code changes against h2. This dataset is not located here, but rather
+stored as a resource in the "common" module.

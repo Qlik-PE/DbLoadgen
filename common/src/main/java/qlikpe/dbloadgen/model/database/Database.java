@@ -17,6 +17,9 @@ import lombok.Getter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import qlikpe.dbloadgen.model.initializer.UnsignedInteger;
+import qlikpe.dbloadgen.model.output.OutputBuffer;
+import qlikpe.dbloadgen.model.output.OutputBufferMap;
+import qlikpe.dbloadgen.model.output.TextBuffer;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -253,12 +256,16 @@ public abstract class Database {
 
     /**
      * create the target schema if it doesn't already exist.
-     *
-     * @param connection the database connection to use.
+     *  @param connection the database connection to use.
      * @param schemaName the name of the schema
+     * @return true on success;
      */
-    public void createSchema(Connection connection, String schemaName) {
+    public boolean createSchema(Connection connection, String schemaName) {
+        boolean rval;
         String query;
+        TextBuffer outputBuffer =
+                (TextBuffer)OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.INITIALIZE_SCHEMA);
+
 
         if (supportsExists)
             query = String.format("CREATE SCHEMA IF NOT EXISTS %s", quoteName(schemaName));
@@ -267,12 +274,18 @@ public abstract class Database {
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(query);
+            outputBuffer.addLine(OutputBuffer.Priority.INFO, "created schema " + schemaName);
             LOG.debug("create schema succeeded: " + query);
             stmt.close();
+            rval = true;
         } catch (SQLException e) {
+            String message = String.format("Failed to create schema %s: %s", schemaName, e.getMessage());
+            outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
             LOG.error("Failed to create schema: " + query, e);
+            rval = false;
         }
 
+        return rval;
     }
 
     /**
@@ -280,8 +293,12 @@ public abstract class Database {
      *
      * @param connection the database connection to use.
      * @param schemaName the name of the schema.
+     * @return true on success, false otherwise.
      */
-    public void dropSchema(Connection connection, String schemaName) {
+    public boolean dropSchema(Connection connection, String schemaName) {
+        boolean rval;
+        TextBuffer outputBuffer =
+                (TextBuffer)OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.CLEANUP);
         String query;
 
         if (supportsExists)
@@ -292,11 +309,25 @@ public abstract class Database {
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(query);
+            rval = true;
+            outputBuffer.addLine(OutputBuffer.Priority.INFO, "successfully dropped schema " + schemaName);
             LOG.debug("drop schema succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
-            LOG.error("Failed to drop schema: " + query, e);
+            String exception = e.getMessage().toLowerCase();
+            String message;
+            if (exception.contains("not found")) {
+                rval = true;
+                message = String.format("Schema %s was not found: %s", schemaName, e.getMessage());
+
+            } else {
+                rval = false;
+                message = String.format("Failed to drop schema %s: %s", schemaName, e.getMessage());
+            }
+            outputBuffer.addLine(OutputBuffer.Priority.WARNING, message);
+            LOG.warn(message);
         }
+        return rval;
     }
 
     /**
@@ -304,8 +335,13 @@ public abstract class Database {
      *
      * @param connection the database connection to use.
      * @param table      the table we need to drop.
+     * @return true if successful, false otherwise.
      */
-    public void dropTable(Connection connection, Table table) {
+    public boolean dropTable(Connection connection, Table table) {
+        boolean rval;
+        TextBuffer outputBuffer =
+                (TextBuffer)OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.CLEANUP);
+
         String query;
 
         if (supportsExists)
@@ -320,13 +356,25 @@ public abstract class Database {
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(query);
+            rval = true;
+            outputBuffer.addLine(OutputBuffer.Priority.INFO, "dropped table " + table.getName());
             LOG.debug("drop table succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
-            LOG.warn("Failed to drop table: " + query);
-            LOG.warn("   Message: " + e.getMessage());
-        }
+            String exception = e.getMessage().toLowerCase();
+            String message;
+            if (exception.contains("not found")) {
+                rval = true;
+                message = String.format("Table %s was not found: %s", table.getName(), e.getMessage());
 
+            } else {
+                rval = false;
+                message = String.format("Failed to drop table %s: %s", table.getName(), e.getMessage());
+            }
+            outputBuffer.addLine(OutputBuffer.Priority.WARNING, message);
+            LOG.warn(message);
+        }
+        return rval;
     }
 
     /**
@@ -379,13 +427,22 @@ public abstract class Database {
             query = String.format("%s%s", query, pk);
         }
         query = query + ")";
+        String message;
+        TextBuffer outputBuffer =
+                (TextBuffer)OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.INITIALIZE_SCHEMA);
+
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(query);
+            message = String.format("created table %s.%s", table.getSchemaName(), table. getName());
+            outputBuffer.addLine(OutputBuffer.Priority.INFO, message);
             LOG.debug("create table succeeded: " + query);
             stmt.close();
             rval = true;
         } catch (SQLException e) {
+            message = String.format("Failed to create table %s.%s message=%s",
+                    table.getSchemaName(), table.getName(), e.getMessage());
+            outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
             LOG.error("Failed to create table: " + query, e);
             rval = false;
         }

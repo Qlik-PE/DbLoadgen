@@ -11,6 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+.tableFixHead {
+    overflow-y: auto;
+    height: 150px;
+}
+.tableFixHead thead th {
+    position: sticky;
+    top: 0;
+}
 
 .clearing {
     height: 1px;
@@ -63,7 +71,7 @@ input[type=text].error {
     outline: #00f0fe auto 2px;
 }
 
-#loadgenVersion {
+#dbloadgenVersion {
     color: #888;
     font-size: 0.8em;
     margin-top: -1.8em;
@@ -89,3 +97,5 @@ input[type=text].error {
     font-family: monospace;
     color: #999;
 }
+
+

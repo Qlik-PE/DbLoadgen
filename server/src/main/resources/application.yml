@@ -15,20 +15,12 @@ spring:
       roles: USER
   jmx:
     enabled: true
-    default_domain: Loadgen
+    default_domain: DbLoadgen
   jackson:
     deserialization:
       fail_on_unknown_properties: false
       read_unknown_enum_values_as_null: true
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: sa
-  h2:
-    console:
-      enabled: true
-      path: /h2
+
 
 management:
   endpoints:
@@ -38,8 +30,5 @@ management:
   server:
     port: 9090
 
-loadgen.monitor:
-  clientId: Loadgen
-
-
-
+dbloadgen:
+  directory: ./datasets

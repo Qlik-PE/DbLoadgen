@@ -1,0 +1,36 @@
+## 
+## Run DbLoadGen in Docker Compose.
+##
+## Maintained by: John Neal
+##
+version: '3.0'
+services:
+
+##
+## run DbLoadgen. Exposes the configured <port> to localhost so you can connect
+## to "https://localhost:<port>". 
+##
+## PORT: DbloadGen listens on port 9090 by default. You can change this if you want,
+##       but given this is docker, you can leave the default port and then map it to
+##       a different HOST PORT.
+## GUIUSER: The user name that you will use to log into the GUI. The default is "admin".
+## PASSWORD: The password you will use to log into the GUI. The default is "admin".
+## DATASETS: the path to the datasets you want to use. There are a several builtin
+##           datasets. To have these be available, set DATASETS to "./datasets" (which
+##           is the default. In this case, do NOT specify a datasets volume. To provide
+##           your own datasets, uncomment the lines associated with VOLUMES and set
+##           DATASETS=/datasets, which is the volume mount point specified below.
+##
+   dbloadgen:
+      image: attunitypm/dbloadgen:latest
+      container_name: dbloadgen
+      environment:
+         - PASSWORD=admin
+         - GUIUSER=admin
+         - PORT=9090
+         - DATASETS=./datasets   # change to /datasets if you mount a datasets volume
+      tty: true
+      stdin_open: true
+      ports:
+         - 9090:9090
+

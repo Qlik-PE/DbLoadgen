@@ -22,7 +22,7 @@
                 </div>
                 <div class="col-md-10 text-center">
                     <h1 class="app-name brand mb-0">
-                        Loadgen
+                        DbLoadgen
                     </h1>
                 </div>
                 <div class="form-check form-switch col-md-1">

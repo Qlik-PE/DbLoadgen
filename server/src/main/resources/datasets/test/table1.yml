@@ -1,0 +1,75 @@
+!!qlikpe.dbloadgen.model.database.Table
+name: table1
+columns:
+  - name: yearID
+    type: int4
+    nullable: false
+    initializer: "SignedInteger,1890,2021"
+  - name: lgID
+    type: varchar(64)
+    nullable: false
+    initializer: "RandomString,ALPHA,10"
+  - name: teamID
+    type: varchar(64)
+    nullable: false
+    initializer: "RandomString,ALPHA,10"
+  - name: HalfID
+    type: int4
+    nullable: false
+    initializer: "SignedInteger"
+  - name: divID
+    type: varchar(64)
+    nullable: false
+    initializer: "RandomString,ALPHA,10"
+  - name: DivWin
+    type: varchar(64)
+    nullable: true
+    initializer: "RandomString,ALPHA,10"
+  - name: Rank
+    type: uint4
+    nullable: true
+    initializer: "UnsignedInteger,0,100"
+  - name: G
+    type: int4
+    nullable: true
+    initializer: "SignedInteger"
+  - name: W
+    type: uint4
+    nullable: true
+    initializer: "UnsignedInteger"
+  - name: L
+    type: uint4
+    nullable: true
+    initializer: "UnsignedInteger"
+keyColumns:
+  - yearID
+  - lgID
+  - teamID
+  - HalfID
+  - divID
+data:
+  - "'1981', 'NL', 'ATL', '1', 'W', 'N', '4', '54', '25', '29'"
+  - "'1981', 'NL', 'ATL', '2', 'W', 'N', '5', '52', '25', '27'"
+  - "'1981', 'AL', 'BAL', '1', 'E', 'N', '2', '54', '31', '23'"
+  - "'1981', 'AL', 'BAL', '2', 'E', 'N', '4', '51', '28', '23'"
+  - "'1981', 'AL', 'BOS', '1', 'E', 'N', '5', '56', '30', '26'"
+  - "'1981', 'AL', 'BOS', '2', 'E', 'N', '2', '52', '29', '23'"
+  - "'1981', 'AL', 'CAL', '1', 'W', 'N', '4', '60', '31', '29'"
+  - "'1981', 'AL', 'CAL', '2', 'W', 'N', '6', '50', '20', '30'"
+  - "'1981', 'AL', 'CHA', '1', 'W', 'N', '3', '53', '31', '22'"
+  - "'1981', 'AL', 'CHA', '2', 'W', 'N', '6', '53', '23', '30'"
+  - "'1981', 'NL', 'CHN', '1', 'E', 'N', '6', '52', '15', '37'"
+  - "'1981', 'NL', 'CHN', '2', 'E', 'N', '5', '51', '23', '28'"
+  - "'1981', 'NL', 'CIN', '1', 'W', 'N', '2', '56', '35', '21'"
+  - "'1981', 'NL', 'CIN', '2', 'W', 'N', '2', '52', '31', '21'"
+  - "'1981', 'AL', 'CLE', '1', 'E', 'N', '6', '50', '26', '24'"
+  - "'1981', 'AL', 'CLE', '2', 'E', 'N', '5', '53', '26', '27'"
+  - "'1981', 'AL', 'DET', '1', 'E', 'N', '4', '57', '31', '26'"
+  - "'1981', 'AL', 'DET', '2', 'E', 'N', '2', '52', '29', '23'"
+  - "'1981', 'NL', 'HOU', '1', 'W', 'N', '3', '57', '28', '29'"
+  - "'1981', 'NL', 'HOU', '2', 'W', 'N', '1', '53', '33', '20'"
+  - "'1981', 'AL', 'KCA', '1', 'W', 'N', '5', '50', '20', '30'"
+  - "'1981', 'AL', 'KCA', '2', 'W', 'N', '1', '53', '30', '23'"
+  - "'1981', 'NL', 'LAN', '1', 'W', 'N', '1', '57', '36', '21'"
+  - "'1981', 'NL', 'LAN', '2', 'W', 'N', '4', '53', '27', '26'"
+  - "'1981', 'AL', 'MIN', '1', 'W', 'N', '7', '56', '17', '39'"

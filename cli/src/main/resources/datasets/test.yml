@@ -10,9 +10,9 @@ workerBatchSleep: 50
 workerThreadSleep: 0
 allTablesAllThreads: true
 operationPct:
-   insert: 25
-   update: 50
-   delete: 25
+   insert: 20
+   update: 60
+   delete: 20
 tables:
    - name: table1
      preload: data

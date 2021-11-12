@@ -2,6 +2,9 @@ package qlikpe.dbloadgen.model.database;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import qlikpe.dbloadgen.model.output.OutputBuffer;
+import qlikpe.dbloadgen.model.output.OutputBufferMap;
+import qlikpe.dbloadgen.model.output.TextBuffer;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -64,7 +67,7 @@ public class DatabaseConnection {
             connection = null;
             connectionStatus = "class not found: " + jdbcDriver;
         } catch (SQLException se) {
-            LOG.error("SQL Exception: could not connect to DB", se);
+            LOG.error("SQL Exception: could not connect to DB: {}", se.getMessage());
             connection = null;
             connectionStatus = "failed";
         }
@@ -83,7 +86,7 @@ public class DatabaseConnection {
                 LOG.debug("successfully disconnected from database: " + url);
             }
         } catch(SQLException se) {
-            LOG.error("SQL Exception: could not close connection", se);
+            LOG.error("SQL Exception: could not close connection: {}", se.getMessage());
             connectionStatus = "failed disconnect";
         }
     }
@@ -94,16 +97,25 @@ public class DatabaseConnection {
      */
     public boolean testConnection() {
         boolean rval;
+        String message;
 
         LOG.info("testing database connectivity for database: " + url);
+        TextBuffer outputBuffer = OutputBufferMap.getInstance().getTextBuffer(OutputBufferMap.TEST_CONNECTION,
+                "Test Database Connection");
+        outputBuffer.resetBuffer();
+
         Connection conn = connect();
         if (conn != null) {
             disconnect();
             rval = true;
-            LOG.info("database connection achieved for database: " + url);
+            message = "database connection achieved for database: " + url;
+            outputBuffer.addLine(OutputBuffer.Priority.SUCCESS, message);
+            LOG.info(message);
         } else {
             rval = false;
-            LOG.error("database connection failed for database: " + url);
+            message = "database connection failed for database: " + url;
+            outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
+            LOG.error(message);
         }
         return rval;
     }

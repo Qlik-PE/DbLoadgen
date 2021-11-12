@@ -6,10 +6,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
+import qlikpe.dbloadgen.DbLoadgenProperties;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -59,6 +61,30 @@ public class DbLoadgenConnectionList {
     }
 
     /**
+     * Add a list of connections to this connection list.
+     * @param list an instance of DbLoadgenConnectionList.
+     */
+    public void addConnectionList(DbLoadgenConnectionList list) {
+        if (list != null) {
+            for(DbLoadgenConnectionInfo connection : list.getConnections()) {
+                addConnection(connection);
+            }
+        }
+    }
+
+    /**
+     * Get the connection names that have been defined
+     * @return a list of connection names.
+     */
+    public List<String> getConnectionNames() {
+        List<String> list = new ArrayList<>();
+        for(DbLoadgenConnectionInfo connection : connections)
+            list.add(connection.getName());
+
+        return list;
+    }
+
+    /**
      * Convert this list of connections to an instance of java.util.Properties.
      * @return the generated properties.
      */
@@ -75,6 +101,29 @@ public class DbLoadgenConnectionList {
             addProperty(properties, connectionName, "password", connection.getPassword());
         }
         return properties;
+    }
+
+    /**
+     * Update the connections with any values that might have been overridden by other properties,
+     * most like from the saved context.
+     * @param dbloadgenProperties the application properties
+     */
+    public void convertFromProperties(DbLoadgenProperties dbloadgenProperties) {
+        String connectionName;
+        Properties connectionProperties;
+
+        for(DbLoadgenConnectionInfo connection : connections) {
+            connectionName = connection.getName();
+            connectionProperties = dbloadgenProperties.getPropertySubset(DbLoadgenProperties.CONNECTION_PREFIX + connectionName,
+                    true);
+            if (connectionProperties.size() > 0) {
+                connection.setDatabaseType(connectionProperties.getProperty("databaseType"));
+                connection.setJdbcDriver(connectionProperties.getProperty("jdbcDriver"));
+                connection.setUrl(connectionProperties.getProperty("url"));
+                connection.setUsername(connectionProperties.getProperty("userName"));
+                connection.setPassword(connectionProperties.getProperty("password"));
+            }
+        }
     }
 
     /**
@@ -97,6 +146,24 @@ public class DbLoadgenConnectionList {
      */
     public static DbLoadgenConnectionList parseConnectionListYaml(String fileName) {
         DbLoadgenConnectionList connectionList;
+        DbLoadgenConnectionList defaultConnections = null;
+
+        // load any default connections from the classpath.
+        ClassLoader classLoader = DbLoadgenConnectionList.class.getClassLoader();
+        String resourceDir = String.format("%s/%s",
+                DbLoadgenProperties.DATASET_RESOURCE_DIR, DbLoadgenProperties.CONNECTION_LIST_DEFAULT);
+        InputStream defaultConnectionStream = classLoader.getResourceAsStream(resourceDir);
+        if (defaultConnectionStream == null) {
+            LOG.warn("Default connection list was not found");
+        } else {
+            LOG.debug("parsing default connection info file {}", fileName);
+            Yaml yaml = new Yaml(new Constructor(DbLoadgenConnectionList.class));
+            defaultConnections = yaml.load(defaultConnectionStream);
+            LOG.debug("default connection info file {} has been parsed: connections.size(): {}",
+                    fileName, defaultConnections.getConnections().size());
+        }
+
+        // load the connections.yml file.
         try {
             InputStream is = new FileInputStream(fileName);
             LOG.debug("parsing connection info file {}", fileName);
@@ -104,11 +171,15 @@ public class DbLoadgenConnectionList {
             connectionList = yaml.load(is);
             LOG.debug("connection info file {} has been parsed: connections.size(): {}",
                     fileName, connectionList.getConnections().size());
-
+            // merge in the default connections
+            if (defaultConnections != null) {
+                connectionList.addConnectionList(defaultConnections);
+            }
         } catch (FileNotFoundException e) {
             LOG.warn("connection info file {}: {}", fileName, e.getMessage());
-            connectionList = null;
+            connectionList = defaultConnections;
         }
+
         return connectionList;
     }
 }

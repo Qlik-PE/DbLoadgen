@@ -16,42 +16,47 @@ package qlikpe.dbloadgen.controller;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.ApplicationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import qlikpe.dbloadgen.config.DatabaseConfiguration;
-import qlikpe.dbloadgen.config.WorkloadConfiguration;
-import qlikpe.dbloadgen.model.database.Database;
-import qlikpe.dbloadgen.model.database.MySqlDialect;
-import qlikpe.dbloadgen.service.BuildInfo;
-
-import org.springframework.beans.factory.*;
-import org.springframework.boot.info.*;
-import org.springframework.http.*;
-import org.springframework.stereotype.*;
-import org.springframework.ui.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import qlikpe.dbloadgen.DbLoadgenProperties;
+import qlikpe.dbloadgen.model.database.Database;
+import qlikpe.dbloadgen.model.workload.*;
+import qlikpe.dbloadgen.service.BuildInfo;
+import qlikpe.dbloadgen.service.WorkloadService;
 
-import javax.sql.DataSource;
-import java.util.*;
+import java.util.List;
+import java.util.Properties;
 
 @Controller
 public final class HomeController {
-  private static final Logger LOG = LogManager.getLogger(MySqlDialect.class);
+  private static final Logger LOG = LogManager.getLogger(HomeController.class);
   private final BuildProperties buildProperties;
-  private final WorkloadConfiguration workload;
-  private final DatabaseConfiguration databaseProperties;
   private final ApplicationContext context;
 
-  public HomeController(ObjectProvider<BuildInfo> buildInfoProvider, WorkloadConfiguration workload,
-                        DatabaseConfiguration databaseProperties, ApplicationContext context) {
+  private final DbLoadgenProperties dbLoadgenProperties;
+  private final WorkloadConfigList workloadConfigList;
+  private final WorkloadService workloadService;
+
+  @Autowired
+  public HomeController(ObjectProvider<BuildInfo> buildInfoProvider, ApplicationContext context,
+                        WorkloadService workloadService) {
+    dbLoadgenProperties = DbLoadgenProperties.getInstance();
+    workloadConfigList = WorkloadConfigList.getInstance();
+    this.workloadService = workloadService;
     this.buildProperties = buildInfoProvider.stream()
         .map(BuildInfo::getBuildProperties)
         .findAny()
         .orElseGet(HomeController::blankBuildProperties);
-    this.workload = workload;
     this.context = context;
-    this.databaseProperties = databaseProperties;
+
+
   }
 
   private static BuildProperties blankBuildProperties() {
@@ -63,35 +68,37 @@ public final class HomeController {
 
   @RequestMapping("/")
   public String homePage(Model model,
-                        @ModelAttribute("message") String message) {
-                        //@RequestParam(name="message", required = false, defaultValue = "no message") String message) {
+                         @RequestParam(name="connectionName", required = false) String connectionRequest,
+                         @RequestParam(name="workloadName", required = false) String workloadRequest) {
+
+
+    if (connectionRequest != null) {
+      // set the connection name to the choice from the selection box.
+      LOG.info("connection request: {}", connectionRequest);
+      dbLoadgenProperties.setProperty(DbLoadgenProperties.CONNECTION_NAME, connectionRequest);
+    }
+    if (workloadRequest != null) {
+      // set the workload name to the choice from the selection box.
+      LOG.info("Workload Request: {}", workloadRequest);
+      dbLoadgenProperties.setProperty(DbLoadgenProperties.WORKLOAD_CONFIG_FILE, workloadRequest);
+    }
+    //workloadService.workloadInit();
+    //WorkloadConfig workloadConfig = workloadService.getWorkloadManager().getWorkloadConfig();
+
+    String workloadName = dbLoadgenProperties.getProperty(DbLoadgenProperties.WORKLOAD_CONFIG_FILE);
+    WorkloadConfig workloadConfig = workloadConfigList.getWorkloadConfigByName(workloadName);
+    String connectionName = dbLoadgenProperties.getProperty(DbLoadgenProperties.CONNECTION_NAME);
+    DbLoadgenConnectionList connectionList = dbLoadgenProperties.getConnectionList();
+    DbLoadgenConnectionInfo connection = connectionList.getConnection(connectionName);
+    List<String> workloadNames = workloadConfigList.getWorkloadNames();
+    List<String> connectionNames = connectionList.getConnectionNames();
     model.addAttribute("buildProperties", buildProperties);
-    model.addAttribute("message", message);
+    model.addAttribute("connectionNames", connectionNames);
+    model.addAttribute("connection", connection);
+    model.addAttribute("workloadNames", workloadNames);
+    model.addAttribute("workload", workloadConfig);
 
     return "home-page";
-  }
-
-  @RequestMapping(value = "/test-connection", method = RequestMethod.POST)
-  public String testConnection(Model model, RedirectAttributes redirectAttributes) {
-
-    String message = "foobar";
-    Database db;
-
-    redirectAttributes.addFlashAttribute("message", message);
-    return "redirect:/";
-    //return "redirect:/" + "?message=" + message;
-  }
-
-  /**
-   * This function needs to be called after the user has set the
-   * jdbc properties to access the database. It will override the
-   * default settings of the Spring datasource to use these
-   * new settings.
-   */
-  public void refreshLoadgenJdbc(Database db) {
-    DataSource ds = (DataSource) context.getBean("loadgenDataSource", db);
-    JdbcTemplate loadgenJdbcTemplate = (JdbcTemplate) context.getBean("loadgenJdbcTemplate");
-    loadgenJdbcTemplate.setDataSource(ds);
   }
 
   @ResponseStatus(HttpStatus.OK)

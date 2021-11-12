@@ -11,28 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package qlikpe.dbloadgen.config;
-
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 /**
- * Gets properties related to test execution.
+ * Classes for accumulating and managing runtime output separate from Log4j and friends.
  */
-@Getter
-@Setter
-@Configuration
-@ConfigurationProperties(prefix = "workload")
-public class WorkloadConfiguration {
-    /**
-     * The type of database we will use for this test.
-     */
-    private String databaseType;
-
-    /**
-     * Default constructor.
-     */
-    public WorkloadConfiguration() { }
-}
+package qlikpe.dbloadgen.model.output;

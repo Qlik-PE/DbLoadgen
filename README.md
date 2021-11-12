@@ -27,12 +27,11 @@ real-life content such as social security numbers, credit card numbers, etc.
 
 ## DbLoadgen Architecture
 
-DbLoadgen is written in Java an provide several mechanisms for configuring and initiating workloads:
+DbLoadgen is written in Java and provides several mechanisms for configuring and initiating workloads:
 
 * Controlling a workload directly from the command line
-* Controlling a workload using REST API calls (still to be developed using SpringBoot).
-* Starting and controlling a workload using an HTML- and Javascript-based GUI (still to be developed
-using SpringBoot).
+* Starting and controlling a workload using an HTML- and Javascript-based GUI.
+* Controlling a workload using REST API calls (still to be developed).
 
 This image represents a high-level view of the object model for the workload manager.
 
@@ -42,14 +41,6 @@ This image represents a the DbLoadgen process architecture as it relates to
 interacting with a target database.
 
 ![DbLoadgen Process Architecture](./images/dbloadgen-architecture.png) 
-
-### Regarding SpringBoot
-Spring Boot provides a backend server that can support interactions with many users.
-DbLoadgen could in theory do this as a result, but its primary intent is for there to be a single
-user running a single workload at any point in time. The reason for this is that the process of
-preloading a database and generating transactions makes use of a configurable pool of threads;
-more threads translate to more transaction volume. It would be easy to overwhelm a server
-if multiple high-volume workloads were running at one time.
 
 
 ## Supported Databases
@@ -76,7 +67,7 @@ use, the duration of the test, and more. The metadata is expressed in YAML forma
 shown in the following example. Note that all properties are required. The tables 
 section identifies a list of tables that should be part of the test.
 
-```
+```yaml
 !!qlikpe.dbloadgen.model.workload.WorkloadConfig
 dataset: test           
 schema: myschema        
@@ -152,8 +143,9 @@ with the same name as the *dataset* that was specified in the workload configura
 file.  A table metadata file is used to define the structure of a table, the initializer
 type that should be used to generate values for each column, columns that should
 make up the primary key, etc. The metadata is specified in YAML format as shown in 
-the following example. Note  that all properties are required.
-```
+the following example. Note that the *name* and *type* properties are required. *Nullable* and 
+*initializer* are optional.
+```yaml
 !!qlikpe.dbloadgen.model.database.Table
 name: table1
 columns:
@@ -296,7 +288,7 @@ and update operations. Initializers and their associated arguments that define t
 as specified as YAML strings containing comma-delimited values in the table metadata.
 
 For example: `initializer: "SignedInteger,1890,2021"` says to generate a random integer
-with a value between 1890 and 2021. Note that initializer names are case-sensitive.
+with a value between 1890 and 2021. **Note that initializer names are case-sensitive.**
 
 * **RandomString**: return a random string. All characters in the string are
 randomly selected. This is suitable for use in key columns.
@@ -361,9 +353,9 @@ More initializers can be created if the need arises.
 ## Specifying database connections
 You can specify connections to the various databases you might want to connect to in
 a file called *connections.yml* in your *datasets* directory. You can then reference
-these connections by name from the command line.
+these connections by name from the command line or in the GUI.
 
-```
+```yaml
 !!qlikpe.dbloadgen.model.workload.DbLoadgenConnectionList
 connections:
    - name: h2mem
@@ -423,8 +415,8 @@ This utility generates user-configurable loads against a database.
 
 positional arguments:
   COMMAND                The runtime command to  execute:  [test-connection, preload, help-commands,
-                         end-to-end,  help-initializers,  cleanup,  list-connections,  reset,  list-
-                         datasets, run, init]
+                         end-to-end,  help-initializers,  cleanup,  list-connections,  reset,  
+                         list-workloads, run, init]
 
 named arguments:
   -h, --help             show this help message and exit
@@ -451,52 +443,184 @@ named arguments:
 COMMAND reference:
 
    test-connection      - test database connectivity
-   preload              - preload the tables for this workload
-   help-commands        - print this brief description of COMMAND options
-   end-to-end           - run an end-to-end test: cleanup, init, preload, and run
-   help-initializers    - print a brief description of the available column initializers
-   cleanup              - remove the workload's tables and associated schema from the database
-   list-connections     - list database connections that have been defined
-   reset                - perform a `cleanup', followed by an 'init' and 'preload'
-   list-datasets        - list datasets that are available to the app.
-   run                  - run the CDC load against the database
    init                 - create the schema and tables for this workload
+   preload              - preload the tables for this workload
+   run                  - run the CDC load against the database
+   cleanup              - remove the workload's tables and associated schema from the database
+   end-to-end           - run an end-to-end test: cleanup, init, preload, and run
+   reset                - perform a `cleanup', followed by an 'init' and 'preload'
+   help-initializers    - print a brief description of the available column initializers
+   list-connections     - list database connections that have been defined
+   list-workloads       - list workload configurations that are available to the app.
+   help-commands        - print this brief description of COMMAND options
 [dbloadgen]$
 ```
 
 ## Running the DbLoadgen Server
 
 In addition to command line-based execution of workloads, workloads can also be configured and 
-executed using the DbLoadgen Server.
+executed using the DbLoadgen Server. The server was developed using Spring Boot.
+
+> **Regarding Spring Boot**: Spring Boot provides a backend server that can support 
+interactions with many users.
+DbLoadgen could in theory do this as a result, but its primary intent (and design)
+is for there to be a single user running a single workload at any point in time.
+The reason for this is that the process of preloading a database and generating
+transactions makes use of a configurable pool of threads;
+more threads translate to more transaction volume. It would be easy to overwhelm a server
+if multiple high-volume workloads were running at one time.
+
+### Running the Server from the Command Line
+
+You can run the server from the command line as follows:
+
+```shell
+PORT="9090"
+DATASETS="./datasets"
+GUIUSER="admin"
+PASSWORD="admin"
+DBLOADGENSERVER_JAR="location-of-the-server-jar"
+
+java -Dfile.encoding=UTF-8  -Doracle.jdbc.javaNetNio=false \
+   -XX:TieredStopAtLevel=1 \
+   -noverify \
+   -Dspring.output.ansi.enabled=always \
+   -Dcom.sun.management.jmxremote \
+   -Dspring.jmx.enabled=true \
+   -Dspring.liveBeansView.mbeanDomain \
+   -Dspring.application.admin.enabled=true \
+   -Dfile.encoding=UTF-8 \
+   -jar "${DBLOADGENSERVER_JAR}" \
+   --dbloadgen.directory="${DATASETS}" \
+   --spring.security.user.name="${GUIUSER}" \
+   --spring.security.user.password="${PASSWORD}" \
+   --server.port="${PORT}" \
+   --management.server.port="${PORT}"
+```
+
+There are also convenience scripts provide for Linux (**dbloadgenserver.sh**)
+and Windows (**dbloadgenserver.bat**).
+
+See the following section on [Using Docker](#Using-Docker) for information on how to run the server as a
+Docker image directly from the command line or using Docker Compose.
 
 ### Connecting via a web browser
 
-TBD - to be completed once implemented.
+You can access DbLoadgen via any standard web browser at the port you specify
+when you start the server. By default, that port is **9090**.
+
+`http://localhost:9090`
+
+Enter your credentials on the login screen. If you don't override them, the
+default username is *admin*, and the default password is *admin* as well.
+
+![DbLoadgen Login Screen](images/dbloadgen-login.png "Login Page")
+
+Once you are logged in, you will be presented with the main page where
+you can select database connections and workloads. 
+
+> At the present time, you
+can override the various settings, but DbLoadgen does not currently provide a
+way to edit the yaml files in the datasets directory and/or create new
+workloads, datasets, and connections. We intend to add those capabilities in
+a future release.
+
+![DbLoadgen Execution Control](images/dbloadgen-execute.png "Execution Control")
+
+When you execute a command, you will be taken to a results page where you can
+see the outcome of the execution.
+
+![DbLoadgen Init Results](images/dbloadgen-init.png "Results of an Init Command")
+
+![Dbloadgen End-to-End Results](images/dbloadgen-run.png "Results of Preload and Run Steps")
 
 ### Controlling a workload using REST API calls
 
-DbLoadgen supports interfacing via REST API calls to initialize and execute workloads.
+DbLoadgen will support interfacing via REST API calls to initialize and execute workloads.
 
 TBD  - to be completed once implemented.
 
 ## Using Docker
 
 The DbLoadgen server is naturally well-suited to being executed in a Docker container.
-Specifics for this will be provided once the DbLoadgen server has been implemented.
-
-### From the command line
-
-TBD
-
-### Using Docker Compose
-
-TBD
 
 ### Public Image
 
 You can find a public image here:
 
-* https://hub.docker.com/repository/docker/attunitypm/TBD
+https://hub.docker.com/repository/docker/attunitypm/dbloadgen
+
+### Execute Docker From the command line
+
+You can run the docker image directly from the command line. If you want to provide your own
+datasets, connections, and workloads, you will need to mount your local datasets directory as
+a volume using the `-v` option and then specify the mount point (i.e. */datasets* in 
+`-v /path/to/your/datasets:/datasets`) in the `-e DATASETS=<directory>` environment variable.
+
+```shell
+PORT="9090"
+DATASETS="./datasets"
+GUIUSER="admin"
+PASSWORD="admin"
+
+docker run -it --rm  \
+       -p $PORT:$PORT \
+       -e GUIUSER=$GUIUSER \
+       -e PASSWORD=$PASSWORD \
+       -e PORT=$PORT \
+       -e DATASETS=$DATASETS \
+       --name dbloadgen attunitypm/dbloadgen:latest
+```
+
+### Using Docker Compose
+
+Running the DbLoadgen server using Docker Compose using the provided
+datasets or mounting your own is straightforward.
+
+#### Using Provided Datasets and Workloads
+
+To use the provided workloads and datasets, you can simply deploy the public image.
+
+```yaml
+version: '3.0'
+services:
+
+   dbloadgen:
+      image: attunitypm/dbloadgen:latest
+      container_name: dbloadgen
+      environment:
+         - PASSWORD=admin
+         - GUIUSER=admin
+         - PORT=9090
+         - DATASETS=./datasets   # change to /datasets if you mount a datasets volume
+      tty: true
+      stdin_open: true
+      ports:
+         - 9090:9090
+```
+
+#### Use Your Own Datasets and Workloads
+To use your own workloads and datasets, you will need to mount an external dataset volume.
+
+```yaml
+version: '3.0'
+services:
+
+   dbloadgen:
+      image: attunitypm/dbloadgen:latest
+      container_name: dbloadgen
+      environment:
+         - PASSWORD=admin
+         - GUIUSER=admin
+         - PORT=9090
+         - DATASETS=/datasets   # change to /datasets if you mount a datasets volume
+      tty: true
+      stdin_open: true
+      ports:
+         - 9090:9090
+      volumes:
+         - /path/to/your/datasets:/datasets
+```
 
 
 ## Building DbLoadgen

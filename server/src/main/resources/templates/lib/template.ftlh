@@ -14,14 +14,17 @@
 <#import "/spring.ftl" as spring />
 <#macro header title>
     <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Loadgen: ${title}</title>
+    <title>DbLoadgen: ${title}</title>
     <link rel="shortcut icon" href="<@spring.url '/images/favicon.ico'/>" type="image/x-icon"/> 
     <link type="text/css" rel="stylesheet" href="<@spring.url '/css/bootstrap.min.css'/>"/>
     <link type="text/css" rel="stylesheet" href="<@spring.url '/css/font-awesome.min.css'/>"/>
+
     <link type="text/css" rel="stylesheet" href="<@spring.url '/css/global.min.css'/>"/>
     <link type="text/css" rel="stylesheet" href="<@spring.url '/css/light-mode.min.css'/>"/>
+
 
     <script src="<@spring.url '/js/jquery-3.5.1.slim.min.js'/>"></script>
     <script src="<@spring.url '/js/bootstrap.bundle.min.js'/>"></script>

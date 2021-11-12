@@ -15,6 +15,9 @@ package qlikpe.dbloadgen.model.database;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import qlikpe.dbloadgen.model.output.OutputBuffer;
+import qlikpe.dbloadgen.model.output.OutputBufferMap;
+import qlikpe.dbloadgen.model.output.TextBuffer;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -85,22 +88,29 @@ public class OracleDialect extends Database {
     /**
      * create the target schema if it doesn't already exist. In oracle terms, a schema
      * is a "user".
-     *
-     * @param connection the database connection to use.
+     *  @param connection the database connection to use.
      * @param schemaName the name of the schema
+     * @return
      */
     @Override
-    public void createSchema(Connection connection, String schemaName) {
+    public boolean createSchema(Connection connection, String schemaName) {
+        TextBuffer outputBuffer =
+                (TextBuffer) OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.INITIALIZE_SCHEMA);
+
         String password = "attunity";
         String query = String.format("CREATE USER %s IDENTIFIED BY %s", quoteName(schemaName), quoteName(password));
         String code = codeBlock(query, -1920);
 
+
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(code);
+            outputBuffer.addLine(OutputBuffer.Priority.INFO, "created schema " + schemaName);
             LOG.debug("create schema succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
+            String message = String.format("Failed to create schema %s: %s", schemaName, e.getMessage());
+            outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
             LOG.error("Failed to create schema: " + code, e.getMessage());
         }
 
@@ -109,10 +119,14 @@ public class OracleDialect extends Database {
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(query);
-            LOG.debug("alter user succeeded: " + query);
+            outputBuffer.addLine(OutputBuffer.Priority.INFO, "alter user quota succeeded for schema " + schemaName);
+            LOG.debug("alter user quota succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
-            LOG.error("Failed to alter user: " + query, e.getMessage());
+            String message = String.format("Failed to alter user quota for schema %s: %s", schemaName, e.getMessage());
+            outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
+
+            LOG.error("Failed to alter user quota: " + query, e.getMessage());
         }
 
         query = String.format("GRANT UNLIMITED TABLESPACE TO %s", quoteName(schemaName));
@@ -120,12 +134,16 @@ public class OracleDialect extends Database {
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(query);
+            outputBuffer.addLine(OutputBuffer.Priority.INFO, "grant unlimited tablespace succeeded for user " + schemaName);
             LOG.debug("grant tablespace succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
+            String message = String.format("Failed to grant tablespace for user %s: %s", schemaName, e.getMessage());
+            outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
             LOG.error("Failed to grant tablespace: " + query, e.getMessage());
         }
 
+        return false;
     }
 
     /**
@@ -133,20 +151,38 @@ public class OracleDialect extends Database {
      *
      * @param connection the database connection to use.
      * @param schemaName the name of the schema.
+     * @return true on success, false otherwise.
      */
     @Override
-    public void dropSchema(Connection connection, String schemaName) {
+    public boolean dropSchema(Connection connection, String schemaName) {
+        boolean rval;
+        TextBuffer outputBuffer =
+                (TextBuffer)OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.CLEANUP);
         String query = String.format("DROP USER %s CASCADE", quoteName(schemaName));
         String code = codeBlock(query, -1918);
 
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(code);
+            rval = true;
+            outputBuffer.addLine(OutputBuffer.Priority.INFO, "dropped user schema " + schemaName);
             LOG.debug("drop schema succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
-            LOG.error("Failed to drop schema: " + code, e.getMessage());
+            String exception = e.getMessage().toLowerCase();
+            String message;
+            if (exception.contains("not found")) {
+                rval = true;
+                message = String.format("Schema %s was not found: %s", schemaName, e.getMessage());
+
+            } else {
+                rval = false;
+                message = String.format("Failed to drop schema %s: %s", schemaName, e.getMessage());
+            }
+            outputBuffer.addLine(OutputBuffer.Priority.WARNING, message);
+            LOG.warn(message);
         }
+        return rval;
     }
 
     /**
@@ -154,9 +190,14 @@ public class OracleDialect extends Database {
      *
      * @param connection the database connection to use.
      * @param table      the table we need to drop.
+     * @return true on success, false otherwise.
      */
     @Override
-    public void dropTable(Connection connection, Table table) {
+    public boolean dropTable(Connection connection, Table table) {
+        boolean rval;
+        TextBuffer outputBuffer =
+                (TextBuffer)OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.CLEANUP);
+
         String query = String.format("DROP TABLE %s.%s PURGE",
                 quoteName(table.getSchemaName()), quoteName(table.getName()));
         String code = codeBlock(query, -942);
@@ -164,13 +205,25 @@ public class OracleDialect extends Database {
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(code);
+            rval = true;
+            outputBuffer.addLine(OutputBuffer.Priority.INFO, "successfully dropped table " + table.getName());
             LOG.debug("drop table succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
-            LOG.warn("Failed to drop table: " + code);
-            LOG.warn("   Message: " + e.getMessage());
-        }
+            String exception = e.getMessage().toLowerCase();
+            String message;
+            if (exception.contains("not found")) {
+                rval = true;
+                message = String.format("Table %s was not found: %s", table.getName(), e.getMessage());
 
+            } else {
+                rval = false;
+                message = String.format("Failed to drop table %s: %s", table.getName(), e.getMessage());
+            }
+            outputBuffer.addLine(OutputBuffer.Priority.WARNING, message);
+            LOG.warn(message);
+        }
+        return rval;
     }
 
     /**
