@@ -20,10 +20,10 @@ set datasets=".\datasets"
    -Dspring.application.admin.enabled=true ^
    -Dfile.encoding=UTF-8 ^
    -jar %serverjar% ^
-   --dbloadgen.directory="%datasts%" ^
-   --spring.security.user.name="%guiuser%"" ^
-   --spring.security.user.password="%password%" ^
-   --server.port="%port%" ^
-   --management.server.port="%port%"
+   --dbloadgen.directory=%datasets% ^
+   --spring.security.user.name=%guiuser% ^
+   --spring.security.user.password=%password% ^
+   --server.port=%port% ^
+   --management.server.port=%port%
 
 
