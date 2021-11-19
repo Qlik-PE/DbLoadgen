@@ -293,7 +293,12 @@ with a value between 1890 and 2021. **Note that initializer names are case-sensi
 * **RandomString**: return a random string. All characters in the string are
 randomly selected. This is suitable for use in key columns.
   * Usage: RandomString - generate an alphanumeric string of length 10. 
-  * RandomString,*type*,*length* - generate a string of the specified length where type is one of 
+  * RandomString,*type*,*length* - generate a string of the specified length where type is one of
+     * UPPER: generate an uppercase string
+     * LOWER: generate a lowercase string
+     * ALPHA: generate a string containing uppercase and lowercase letters
+     * NUMBERS: generate a string containing only numbers
+     * ALL: generate a string containing all characters
 * **FixedString**: generate a string of fixed length.  Relatively efficient but not terribly random.
 Not suitable for use in a key column.
   * Usage: FixedString - generate a string of the default length of 10
@@ -463,8 +468,8 @@ executed using the DbLoadgen Server. The server was developed using Spring Boot.
 
 > **Regarding Spring Boot**: Spring Boot provides a backend server that can support 
 interactions with many users.
-DbLoadgen could in theory do this as a result, but its primary intent (and design)
-is for there to be a single user running a single workload at any point in time.
+DbLoadgen could in theory do this as a result, but its current design calls for
+there to be a single user running a single workload at any point in time.
 The reason for this is that the process of preloading a database and generating
 transactions makes use of a configurable pool of threads;
 more threads translate to more transaction volume. It would be easy to overwhelm a server
@@ -498,7 +503,7 @@ java -Dfile.encoding=UTF-8  -Doracle.jdbc.javaNetNio=false \
    --management.server.port="${PORT}"
 ```
 
-There are also convenience scripts provide for Linux (**dbloadgenserver.sh**)
+There are also convenience scripts provided for Linux (**dbloadgenserver.sh**)
 and Windows (**dbloadgenserver.bat**).
 
 See the following section on [Using Docker](#Using-Docker) for information on how to run the server as a
