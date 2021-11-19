@@ -27,12 +27,12 @@ image:
 latest:
 	docker tag $(image):$(version) $(image):latest
 
-push:
+pushversion:
 	docker push $(image):$(version)
 
 pushlatest:
 	docker push $(image):latest
 
-push: push pushlatest 
+push: pushversion pushlatest 
 
 
