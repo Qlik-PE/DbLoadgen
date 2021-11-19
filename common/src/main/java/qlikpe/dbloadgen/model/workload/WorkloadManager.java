@@ -29,6 +29,9 @@ import java.io.*;
 import java.sql.Connection;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.round;
@@ -44,19 +47,24 @@ public class WorkloadManager {
     private String connectionName;
     private String runtimeConfig;
     private final List<Table> tables;
-    private final List<Thread> activeThreadList;
+    private ExecutorService executor;
     private WorkloadConfig workloadConfig;
     private Properties connectionInfo;
     private int batchSize;
     private int batchSleep;
     private int threadSleep;
     private int workers;
+    private final AtomicInteger tableMetadataParsed = new AtomicInteger();
     private int preloadedTables = 0;
     private int cdcElapsedPct = 0;
+    private int schemaInitPct = 0;
     private String databaseType;
     private DataTypeMapper dataTypeMapper;
     private boolean preloadRunning = false;
     private boolean cdcTestRunning = false;
+    private boolean parsingMetadata = false;
+    private boolean initializingSchema = false;
+    private final AtomicBoolean executingCommand = new AtomicBoolean(false);
     private boolean stopThreads = false;
 
     /**
@@ -67,8 +75,6 @@ public class WorkloadManager {
         dbLoadgenProperties = DbLoadgenProperties.getInstance();
         outputBufferMap = OutputBufferMap.getInstance();
         tables = Collections.synchronizedList(new ArrayList<>());
-        activeThreadList = new ArrayList<>();
-
     }
 
     /**
@@ -81,7 +87,6 @@ public class WorkloadManager {
         outputBufferMap = OutputBufferMap.getInstance();
         setPropertyManager(runtimeProperties);
         tables = Collections.synchronizedList(new ArrayList<>());
-        activeThreadList = new ArrayList<>();
     }
 
     /**
@@ -106,126 +111,115 @@ public class WorkloadManager {
      * @throws WorkloadInitializationException on an error.
      */
     public void executeCommand(String command, boolean async) throws WorkloadInitializationException {
+
         // clean up from prior runs
         tables.clear();
         outputBufferMap.clear();
 
-        initWorkload();
-
-        switch(command) {
-            case "test-connection":
-                LOG.info("testing connectivity");
-                testConnection();
-                break;
-            case "cleanup":
-                LOG.info("cleaning up from prior runs");
-                cleanup();
-                break;
-            case "init":
-                LOG.info("initializing schema");
-                initSchema();
-                break;
-            case "preload":
-                if (async) {
-                    LOG.info("preloading tables asynchronously");
-                    getPreloadStats();
-                    new Thread(() -> {
-                        preloadTables();
-                        logPreloadStats();
-                    }).start();
-                } else {
-                    LOG.info("preloading tables synchronously");
-                    preloadTables();
-                    logPreloadStats();
-                }
-                break;
-            case "run":
-                if (async) {
-                    LOG.info("running cdc test asynchronously");
-                    getRuntimeStats();
-                    new Thread(() -> {
-                        cdcTest();
-                        logRuntimeStats();
-                    }).start();
-                } else {
-                    LOG.info("running cdc test synchronously");
-                    cdcTest();
-                    logRuntimeStats();
-                }
-                break;
-            case "reset":
-                LOG.info("cleaning up from prior runs");
-                if (cleanup()) {
-                    LOG.info("initializing schema");
-                    if (initSchema()) {
-                        if (async) {
-                            getPreloadStats();
-                            LOG.info("preloading tables asynchronously");
-                            new Thread(() -> {
-                                preloadTables();
-                                logPreloadStats();
-                            }).start();
-                        } else {
-                            LOG.info("preloading tables synchronously");
-                            preloadTables();
-                            logPreloadStats();
-                        }
-                    }
-                }
-                break;
-            case "end-to-end":
-                LOG.info("cleaning up from prior runs");
-                if (cleanup()) {
-                    LOG.info("initializing schema");
-                    if (initSchema()) {
-                        if (async) {
-                            getPreloadStats();
-                            getRuntimeStats();
-                            new Thread(() -> {
-                                LOG.info("preloading tables asynchronously");
-                                preloadTables();
-                                logPreloadStats();
-                                LOG.info("running test asynchronously");
-                                cdcTest();
-                                logRuntimeStats();
-                            }).start();
-                        } else {
-                            LOG.info("preloading tables synchronously");
-                            preloadTables();
-                            logPreloadStats();
-                            LOG.info("running test synchronously");
-                            cdcTest();
-                            logRuntimeStats();
-                        }
-                    }
-                }
-                break;
-            case "list-workloads":
-                System.out.println("Available Workloads:");
-                for(String workloadName : WorkloadConfigList.getInstance().getWorkloadNames()) {
-                    System.out.println("   " + workloadName);
-                }
-                break;
-            case "list-connections":
-                System.out.println("Available Connections:");
-                for(String connectionName : dbLoadgenProperties.getConnectionList().getConnectionNames()) {
-                    System.out.println("   " + connectionName);
-                }
-                break;
-            default:
-                LOG.error("Unrecognized command: " + command);
-                throw new WorkloadInitializationException("Unrecognized command: " + command);
-        }
-        LOG.info("Execution complete");
-    }
-
-    /**
-     * Initialize the workload.
-     * @throws WorkloadInitializationException on a configuration error.
-     */
-    public void initWorkload() throws WorkloadInitializationException {
+        executingCommand.set(true);
         readConnectionInfo();
         readWorkloadInfo();
+
+        AtomicBoolean asyncWait = new AtomicBoolean(!async);
+        // execute the command in a separate thread.
+        Thread asyncThread = new Thread(() -> {
+            switch(command) {
+                case "test-connection":
+                    asyncWait.set(true);  // always run synchronously
+                    LOG.info("testing connectivity");
+                    testConnection();
+                    break;
+                case "cleanup":
+                    LOG.info("cleaning up from prior runs");
+                    asyncWait.set(true);  // always run synchronously
+                    if (readTableInfo()) {
+                        cleanup();
+                    }
+                    break;
+                case "init":
+                    LOG.info("initializing schema");
+                    if (readTableInfo()) {
+                        initSchema();
+                    }
+                    break;
+                case "preload":
+                    if (readTableInfo()) {
+                        LOG.info("preloading tables");
+                        getPreloadStats();
+                        preloadTables();
+                        logPreloadStats();
+                    }
+                    break;
+                case "run":
+                    if (readTableInfo()) {
+                        LOG.info("running cdc test");
+                        getRuntimeStats();
+                        cdcTest();
+                        logRuntimeStats();
+                    }
+                    break;
+                case "reset":
+                    if (readTableInfo()) {
+                        LOG.info("cleaning up from prior runs");
+                        if (cleanup()) {
+                            LOG.info("initializing schema");
+                            if (initSchema()) {
+                                LOG.info("preloading tables");
+                                getPreloadStats();
+                                preloadTables();
+                                logPreloadStats();
+                            }
+                        }
+                    }
+                    break;
+                case "end-to-end":
+                    if (readTableInfo()) {
+                        LOG.info("cleaning up from prior runs");
+                        if (cleanup()) {
+                            LOG.info("initializing schema");
+                            if (initSchema()) {
+                                getPreloadStats();
+                                getRuntimeStats();
+                                LOG.info("preloading tables");
+                                preloadTables();
+                                logPreloadStats();
+                                LOG.info("running test");
+                                cdcTest();
+                                logRuntimeStats();
+                            }
+                        }
+                    }
+                    break;
+                case "list-workloads":
+                    asyncWait.set(true);  // always run synchronously
+                    System.out.println("Available Workloads:");
+                    for(String workloadName : WorkloadConfigList.getInstance().getWorkloadNames()) {
+                        System.out.println("   " + workloadName);
+                    }
+                    break;
+                case "list-connections":
+                    asyncWait.set(true);  // always run synchronously
+                    System.out.println("Available Connections:");
+                    for(String connectionName : dbLoadgenProperties.getConnectionList().getConnectionNames()) {
+                        System.out.println("   " + connectionName);
+                    }
+                    break;
+                default:
+                    asyncWait.set(true);  // always run synchronously
+                    LOG.error("Unrecognized command: " + command);
+            }
+            executingCommand.set(false);
+        });
+        asyncThread.start();
+        // if execution is synchronous, wait for the thread to complete.
+        if (asyncWait.get()) {
+            try {
+                asyncThread.join();
+            } catch (InterruptedException e) {
+                LOG.info("{}: thread join interrupted: {}", command, e.getMessage());
+            }
+        }
+        LOG.info("Execution complete");
     }
 
     /**
@@ -245,16 +239,20 @@ public class WorkloadManager {
                 "Schema Initialization");
         outputBuffer.resetBuffer();
 
+        initializingSchema = true;
         Connection connection = databaseConnection.connect();
         if (connection != null) {
             String schemaName = workloadConfig.getSchema();
             if (database.createSchema(connection, schemaName)) {
 
                 int failures = 0;
+                int completed = 0;
                 for (Table table : tables) {
                     if (!database.createTable(connection, table))
                         failures++;
                     database.addRandomizer(connection, table);
+                    completed++;
+                    schemaInitPct = round((completed * 100.0f)/tables.size());
                 }
                 if (failures == 0) {
                     rval = true;
@@ -272,6 +270,7 @@ public class WorkloadManager {
             outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
             LOG.error(message);
         }
+        initializingSchema = false;
         return rval;
     }
 
@@ -320,55 +319,38 @@ public class WorkloadManager {
     public void preloadTables() {
         int preloadWorkers = workloadConfig.getPreloadThreads();
         int numTables = tables.size();
-        int activeThreads = 0;
-        int latchCount;
-        String tableName;
         preloadedTables = 0;
 
         preloadRunning = true;
-        CountDownLatch latch = new CountDownLatch(numTables);
         stopThreads = false;
-        activeThreadList.clear();
-        for (int i = 0; i < numTables; ) {
-            if (stopThreads) {
+        CountDownLatch latch = new CountDownLatch(numTables);
+        executor = Executors.newFixedThreadPool(preloadWorkers);
+        for (Table table : tables) {
+            if (stopThreads)
                 break;
-            }
-            tableName = tables.get(i).getName();
-            latchCount = (int) latch.getCount();
-            // start and manage preload worker threads.
-            if (activeThreads < preloadWorkers) {
-                // schedule a thread for this table
-                String threadName = String.format("preload-%s", tableName);
-                Thread t = new Thread(new PreloadThread(threadName, latch, workloadConfig,
-                        databaseType, connectionInfo, tables.get(i)));
-                t.start();
-                activeThreadList.add(t);
-                activeThreads++;
-                preloadedTables++;
-                i++;
-            } else {
-                // wait for a thread to end before scheduling another thread
-                int newCount = (int) latch.getCount();
-                LOG.debug("before while: table: {} latchCount: {} newCount: {}", tableName, latchCount, newCount);
-                while (latchCount == newCount) {
-                    LOG.debug("table: {} latchCount: {} newCount: {}", tableName, latchCount, newCount);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        LOG.warn("interrupt received during preload of table " + tableName, e);
-                    }
-                    newCount = (int) latch.getCount();
-                }
-                activeThreads = activeThreads - (latchCount - newCount);
+            String threadName = String.format("preload-%s", table.getName());
+            executor.execute(new Thread(new PreloadThread(threadName, latch, workloadConfig,
+                    databaseType, connectionInfo, table)));
+        }
+        executor.shutdown();  // we are done adding threads
+        // track thread completion stats
+        while(latch.getCount() > 0) {
+            if (stopThreads)
+                break;
+            preloadedTables = numTables - (int)latch.getCount();
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                LOG.info("preloadTables() interrupted exception");
             }
         }
         // now wait for all threads to exit.
         try {
-            LOG.debug("waiting for preload countdown latch. Count {}", latch.getCount());
+            LOG.debug("preloadTables(): waiting for preload countdown latch. Count {}", latch.getCount());
             latch.await();
             preloadedTables = numTables;
         } catch (InterruptedException ex) {
-            LOG.warn("interrupt received during preload latch wait", ex);
+            LOG.warn("preloadTables(): interrupt received during latch wait", ex);
         }
         stopThreads = false;
         preloadRunning = false;
@@ -376,6 +358,10 @@ public class WorkloadManager {
 
     public int getPreloadPct() {
         return round((preloadedTables * 100.0f)/tables.size());
+    }
+
+    public int getParsingPct() {
+        return round((tableMetadataParsed.get() * 100.0f)/workloadConfig.getTables().size());
     }
 
     /**
@@ -387,30 +373,33 @@ public class WorkloadManager {
     public void cdcTest() {
         int currentWorker;
         long duration = (long) workloadConfig.getDuration() * 60 * 1000;
-        CountDownLatch latch = new CountDownLatch(workers);
-        LOG.info("workers will run for {} minutes", workloadConfig.getDuration());
+
+        LOG.info("cdcTest(): workers will run for {} minutes", workloadConfig.getDuration());
 
         List<List<Table>> workerTables = distributeTables();
 
         stopThreads = false;
-        activeThreadList.clear();
         cdcTestRunning = true;
+        //Timer[] timers = new Timer[workers];
+        CountDownLatch latch = new CountDownLatch(workers);
+        executor = Executors.newCachedThreadPool();
         for (currentWorker = 0; currentWorker < workers; currentWorker++) {
-            if (stopThreads) {
+            if (stopThreads)
                 break;
-            }
             String threadName = String.format("worker-%d", currentWorker);
             Thread t = new Thread(new WorkerThread(threadName, latch,
                     workloadConfig, databaseType, connectionInfo, workerTables.get(currentWorker)));
-            Timer timer = new Timer();
-            timer.schedule(new WorkerTimeoutTask(t, timer), duration);
-            t.start();
-            activeThreadList.add(t);
+            //Timer timer = new Timer(threadName);
+            //timer.schedule(new WorkerTimeoutTask(threadName, t, timer), duration);
+            //timers[currentWorker] = timer;
+            executor.submit(t);
         }
+        executor.shutdown();
 
         try {
             long cdcStartTime = System.currentTimeMillis();
             long cdcElapsedTime = 0;
+            LOG.debug("cdcTest: entering duration loop: elapsedTime: {} duration: {}", cdcElapsedTime, duration);
             while(cdcElapsedTime < duration) {
                 if (stopThreads) {
                     break;
@@ -419,15 +408,18 @@ public class WorkloadManager {
                 cdcElapsedPct = round((cdcElapsedTime * 100.0f)/duration);
                 Thread.sleep(1000);
             }
+            stopThreads();
+            LOG.debug("cdcTest: leaving duration loop");
+
             // now wait for all threads to exit.
             latch.await();
-            LOG.debug("latch.await() triggered");
+            LOG.debug("cdcTest(): latch.await() triggered");
         } catch (InterruptedException ex) {
-            LOG.warn("interrupt received during runtime latch wait", ex);
+            LOG.warn("cdcTest(): interrupt received during runtime latch wait", ex);
         }
         stopThreads = false;
         cdcTestRunning = false;
-        LOG.debug("exiting WorkloadManager.run()");
+        LOG.debug("cdcTest(): exiting");
     }
 
     /**
@@ -437,11 +429,10 @@ public class WorkloadManager {
     public void stopThreads() {
         LOG.info("stopThreads(): sending stop to all threads");
         stopThreads = true;
-        for (Thread t : activeThreadList) {
-            if (t.isAlive())
-                t.interrupt();
+        if (executor != null) {
+            executor.shutdownNow();
+            executor = null;
         }
-        activeThreadList.clear();
     }
 
     /**
@@ -587,35 +578,48 @@ public class WorkloadManager {
         batchSleep = workloadConfig.getWorkerBatchSleep();
         threadSleep = workloadConfig.getWorkerThreadSleep();
         workers = workloadConfig.getWorkerThreads();
+    }
 
+    private boolean readTableInfo() {
         AtomicInteger errors = new AtomicInteger();
         CountDownLatch countdownLatch = new CountDownLatch(workloadConfig.getTables().size());
+        parsingMetadata = true;
 
+        tableMetadataParsed.set(0);
+
+        stopThreads = false;
+        executor = Executors.newFixedThreadPool(4);
         for (TableConfig tableConfig : workloadConfig.getTables()) {
-            new Thread(() -> {
-                boolean rval = readTableInfo(tableConfig);
+            if (stopThreads)
+                break;
+
+            executor.execute(new Thread(() -> {
+                boolean rval = readTableMetadata(tableConfig);
                 if (!rval) errors.getAndIncrement();
+                tableMetadataParsed.getAndIncrement();
                 countdownLatch.countDown();
-            }).start();
+            }));
         }
+        executor.shutdown();
         try {
             countdownLatch.await();
-            LOG.info("table load countdown latch await: threads finished");
+            LOG.debug("table load countdown latch await: threads finished");
         } catch (InterruptedException e) {
             LOG.info("table load countdown latch interrupted: {}", e.getMessage());
         }
-        if (errors.get() > 0)
-            throw new WorkloadInitializationException("error when parsing table metadata");
+        parsingMetadata = false;
+        stopThreads = false;
+        return errors.get() == 0;
     }
 
     /**
      * Ingest the metadata for the specified tables.
      */
-    private boolean readTableInfo(TableConfig tableConfig)  {
+    private boolean readTableMetadata(TableConfig tableConfig)  {
         boolean rval;
         String fileName;
 
-        LOG.debug("readTableInfo(): {}", tableConfig.getName());
+        LOG.debug("readTableMetadata(): {}", tableConfig.getName());
         // now ingest the configurations for the specified tables.
         String datasetDir = dbLoadgenProperties.getProperty(DbLoadgenProperties.DATADIR);
         String resourceDir = DbLoadgenProperties.DATASET_RESOURCE_DIR;

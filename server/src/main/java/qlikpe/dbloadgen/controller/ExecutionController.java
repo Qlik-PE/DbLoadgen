@@ -113,6 +113,7 @@ public final class ExecutionController {
   public String executionResults(Model model) {
 
     StringBuilder results, preloadResults, cdcResults;
+    WorkloadManager workloadManager = workloadService.getWorkloadManager();
 
     OutputBuffer preloadStats = OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.PRELOAD_STATS);
     if (preloadStats != null) {
@@ -128,6 +129,7 @@ public final class ExecutionController {
       buildResults(cdcResults, runtimeStats);
       model.addAttribute("cdcResults", cdcResults.toString());
     }
+    model.addAttribute("executingCommand", workloadManager.getExecutingCommand().get());
     if (runtimeStats == null && preloadStats == null) {
       // only display this stuff if we aren't displaying table information.
       results = new StringBuilder();
@@ -137,17 +139,29 @@ public final class ExecutionController {
       buildResults(results, OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.INITIALIZE_SCHEMA));
       model.addAttribute("results", results.toString());
     }
-    if (workloadService.isPreloadRunning()) {
-      model.addAttribute("preload",  "true");
-      model.addAttribute("preloadPct", workloadService.getWorkloadManager().getPreloadPct());
+    if (workloadManager.isInitializingSchema()) {
+      model.addAttribute("initializingSchema",  true);
+      model.addAttribute("schemaPct", workloadManager.getSchemaInitPct());
     } else {
-      model.addAttribute("preload",  "false");
+      model.addAttribute("initializingSchema",  false);
     }
-    if (workloadService.isCdcTestExecuting()) {
-      model.addAttribute("cdcTest",  "true");
-      model.addAttribute("cdcTestPct", workloadService.getWorkloadManager().getCdcElapsedPct());
+    if (workloadManager.isParsingMetadata()) {
+      model.addAttribute("parsingMetadata",  true);
+      model.addAttribute("parsingPct", workloadManager.getParsingPct());
     } else {
-      model.addAttribute("cdcTest",  "false");
+      model.addAttribute("parsingMetadata",  false);
+    }
+    if (workloadManager.isPreloadRunning()) {
+      model.addAttribute("preload",  true);
+      model.addAttribute("preloadPct", workloadManager.getPreloadPct());
+    } else {
+      model.addAttribute("preload",  false);
+    }
+    if (workloadManager.isCdcTestRunning()) {
+      model.addAttribute("cdcTest",  true);
+      model.addAttribute("cdcTestPct", workloadManager.getCdcElapsedPct());
+    } else {
+      model.addAttribute("cdcTest",  false);
     }
 
     return "execution-results";

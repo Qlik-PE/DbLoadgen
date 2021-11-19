@@ -106,16 +106,16 @@ public class DatabaseConnection {
 
         Connection conn = connect();
         if (conn != null) {
-            disconnect();
-            rval = true;
             message = "database connection achieved for database: " + url;
             outputBuffer.addLine(OutputBuffer.Priority.SUCCESS, message);
             LOG.info(message);
+            disconnect();
+            rval = true;
         } else {
-            rval = false;
             message = "database connection failed for database: " + url;
             outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
             LOG.error(message);
+            rval = false;
         }
         return rval;
     }

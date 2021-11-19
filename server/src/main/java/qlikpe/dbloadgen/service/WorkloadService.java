@@ -137,4 +137,19 @@ public class WorkloadService {
     public boolean isCdcTestExecuting() {
         return workloadManager.isCdcTestRunning();
     }
+
+    /**
+     * Lets us know if we are currently parsing table metadata. This phase can
+     * take awhile if there are a lot of tables or if the table metadata containns
+     * actual data to use during preload.
+     *
+     * @return true if we are parsing metadata, false otherwise.
+     */
+    public boolean isParsingMetadata() { return workloadManager.isParsingMetadata(); }
+
+    /**
+     * Lets us know if we are currently initializing the database schema.
+     * @return true if we are, false otherwise.
+     */
+    public boolean isIntializingSchema() { return workloadManager.isInitializingSchema(); }
 }

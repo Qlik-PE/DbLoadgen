@@ -4,16 +4,34 @@
 
 <#setting number_format="0">
 
-<#if preload == "true" >
+<#if preload == true >
     <#assign refresh = true >
+    <#assign refreshFreq = 5000 >
     <#assign executionStatus = "Preload phase is running ..." >
     <#assign executionPct = preloadPct >
-<#elseif cdcTest == "true">
+<#elseif cdcTest == true>
     <#assign refresh = true >
+    <#assign refreshFreq = 5000 >
     <#assign executionStatus = "CDC phase is running ..." >
     <#assign executionPct = cdcTestPct >
+<#elseif parsingMetadata == true>
+    <#assign refresh = true >
+    <#assign refreshFreq = 1000 >
+    <#assign executionStatus = "Parsing table metadata ..." >
+    <#assign executionPct = parsingPct >
+<#elseif initializingSchema == true>
+    <#assign refresh = true >
+    <#assign refreshFreq = 1000 >
+    <#assign executionStatus = "Initializing Schema ..." >
+    <#assign executionPct = schemaPct >
+<#elseif executingCommand == true>
+    <#assign refresh = true >
+    <#assign refreshFreq = 1000 >
+    <#assign executionStatus = "Execution Status ..." >
+    <#assign executionPct = 50 >
 <#else>
     <#assign refresh = false >
+    <#assign refreshFreq = 100 >
     <#assign executionStatus = "Execution is complete ..." >
     <#assign executionPct = "100" >
 </#if>
@@ -21,7 +39,7 @@
     <script type="text/javascript">
         setTimeout(function(){
             window.location.reload(true);
-        }, 5000);
+        }, ${refreshFreq});
     </script>
 </#if>
 
