@@ -96,6 +96,30 @@ public class SqlServerDialect extends Database {
         TextBuffer outputBuffer =
                 (TextBuffer)OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.CLEANUP);
 
+        /*
+         * Dropping a table will fail if that table is marked for replication. This "pre-drop" step
+         * attempts to unmark the table so we can drop it without affecting other replication-related
+         * settings.
+         *
+         * See: https://pawjershauge.blogspot.com/2012/06/spmsunmarkreplinfo-transact-sql.html
+         */
+        String removeReplication =
+                String.format("IF OBJECT_ID(N'%s.%s', N'U') IS NOT NULL EXEC sp_msunmarkreplinfo [%s], [%s]",
+                table.getSchemaName(), table.getName(),
+                table.getName(), table.getSchemaName());
+
+        try {
+            LOG.debug("dropTable(): attempting to remove replication from table {}", table.getName());
+            Statement stmt = connection.createStatement();
+            stmt.execute(removeReplication);
+            //LOG.debug("dropTable(): remove replication succeeded: " + removeReplication);
+            stmt.close();
+        } catch (SQLException e) {
+            String message = String.format("Failed to remove replication %s: %s", table.getName(), e.getMessage());
+            outputBuffer.addLine(OutputBuffer.Priority.WARNING, message);
+            LOG.warn(message);
+        }
+
         String query = String.format("IF OBJECT_ID(N'%s.%s', N'U') IS NOT NULL DROP TABLE [%s].[%s]",
                 table.getSchemaName(), table.getName(),
                 table.getSchemaName(), table.getName());
