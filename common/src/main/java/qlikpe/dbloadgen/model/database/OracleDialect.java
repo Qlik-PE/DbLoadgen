@@ -90,10 +90,11 @@ public class OracleDialect extends Database {
      * is a "user".
      *  @param connection the database connection to use.
      * @param schemaName the name of the schema
-     * @return
+     * @return success or failure.
      */
     @Override
     public boolean createSchema(Connection connection, String schemaName) {
+        boolean rval = true;
         TextBuffer outputBuffer =
                 (TextBuffer) OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.INITIALIZE_SCHEMA);
 
@@ -109,6 +110,7 @@ public class OracleDialect extends Database {
             LOG.debug("create schema succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
+            rval = false;
             String message = String.format("Failed to create schema %s: %s", schemaName, e.getMessage());
             outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
             LOG.error("Failed to create schema: " + code, e.getMessage());
@@ -123,6 +125,7 @@ public class OracleDialect extends Database {
             LOG.debug("alter user quota succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
+            rval = false;
             String message = String.format("Failed to alter user quota for schema %s: %s", schemaName, e.getMessage());
             outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
 
@@ -138,12 +141,13 @@ public class OracleDialect extends Database {
             LOG.debug("grant tablespace succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
+            rval = false;
             String message = String.format("Failed to grant tablespace for user %s: %s", schemaName, e.getMessage());
             outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
             LOG.error("Failed to grant tablespace: " + query, e.getMessage());
         }
 
-        return false;
+        return rval;
     }
 
     /**

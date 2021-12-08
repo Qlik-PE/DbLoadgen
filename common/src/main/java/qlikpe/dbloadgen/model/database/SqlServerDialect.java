@@ -62,10 +62,11 @@ public class SqlServerDialect extends Database {
      * create the target schema if it doesn't already exist.
      *  @param connection the database connection to use.
      * @param schemaName the name of the schema
-     * @return
+     * @return success or failure.
      */
     @Override
     public boolean createSchema(Connection connection, String schemaName) {
+        boolean rval = true;
         String query = String.format("IF NOT EXISTS ( SELECT * FROM sys.schemas WHERE name = N'%s' )" +
                 "EXEC('CREATE SCHEMA [%s]')", schemaName, schemaName);
 
@@ -75,10 +76,11 @@ public class SqlServerDialect extends Database {
             LOG.debug("create schema succeeded: " + query);
             stmt.close();
         } catch (SQLException e) {
+            rval = false;
             LOG.error("Failed to create schema: " + query, e);
         }
 
-        return false;
+        return rval;
     }
 
     /**

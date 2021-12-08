@@ -243,11 +243,16 @@ public class WorkloadManager {
         Connection connection = databaseConnection.connect();
         if (connection != null) {
             String schemaName = workloadConfig.getSchema();
+            LOG.debug("initSchema(): creating schema {}", schemaName);
             if (database.createSchema(connection, schemaName)) {
 
                 int failures = 0;
                 int completed = 0;
+                if (tables.size() == 0)
+                    LOG.error("initSchema(): No tables defined to initialize");
+                else LOG.debug("initSchema: initializing {} tables", tables.size());
                 for (Table table : tables) {
+                    LOG.debug("initSchema(): initializing table {}", table.getName());
                     if (!database.createTable(connection, table))
                         failures++;
                     database.addRandomizer(connection, table);
@@ -262,6 +267,7 @@ public class WorkloadManager {
                     outputBuffer.addLine(OutputBuffer.Priority.WARNING, "schema initialization completed with errors");
                 }
             } else {
+                LOG.error("initSchema(): create schema failed");
                 rval = false;
             }
         } else {
