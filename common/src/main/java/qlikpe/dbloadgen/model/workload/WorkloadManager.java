@@ -386,7 +386,6 @@ public class WorkloadManager {
 
         stopThreads = false;
         cdcTestRunning = true;
-        //Timer[] timers = new Timer[workers];
         CountDownLatch latch = new CountDownLatch(workers);
         executor = Executors.newCachedThreadPool();
         for (currentWorker = 0; currentWorker < workers; currentWorker++) {
@@ -397,7 +396,6 @@ public class WorkloadManager {
                     workloadConfig, databaseType, connectionInfo, workerTables.get(currentWorker)));
             //Timer timer = new Timer(threadName);
             //timer.schedule(new WorkerTimeoutTask(threadName, t, timer), duration);
-            //timers[currentWorker] = timer;
             executor.submit(t);
         }
         executor.shutdown();

@@ -19,6 +19,12 @@ import org.apache.logging.log4j.Logger;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * This is an instance of TimerTask that contains metadata related t a thred.
+ * Once the associated timer expires, and triggers execution of this task,
+ * the task sends a "shutdown" to the associated thread, cleans up the timer,
+ * and exits.
+ */
 public class WorkerTimeoutTask extends TimerTask {
     private final static Logger LOG = LogManager.getLogger(WorkerTimeoutTask.class);
 
