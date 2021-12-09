@@ -151,5 +151,9 @@ public class WorkloadService {
      * Lets us know if we are currently initializing the database schema.
      * @return true if we are, false otherwise.
      */
-    public boolean isIntializingSchema() { return workloadManager.isInitializingSchema(); }
+    public boolean isInitializingSchema() { return workloadManager.isInitializingSchema(); }
+
+    public boolean executionInProgress() {
+        return isPreloadRunning() || isCdcTestExecuting() || isParsingMetadata() || isInitializingSchema();
+    }
 }

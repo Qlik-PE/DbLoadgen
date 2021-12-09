@@ -71,6 +71,8 @@ public final class HomeController {
                          @RequestParam(name="connectionName", required = false) String connectionRequest,
                          @RequestParam(name="workloadName", required = false) String workloadRequest) {
 
+    if (workloadService.executionInProgress())
+      return "redirect:/execution-results";
 
     if (connectionRequest != null) {
       // set the connection name to the choice from the selection box.
@@ -82,8 +84,6 @@ public final class HomeController {
       LOG.info("Workload Request: {}", workloadRequest);
       dbLoadgenProperties.setProperty(DbLoadgenProperties.WORKLOAD_CONFIG_FILE, workloadRequest);
     }
-    //workloadService.workloadInit();
-    //WorkloadConfig workloadConfig = workloadService.getWorkloadManager().getWorkloadConfig();
 
     String workloadName = dbLoadgenProperties.getProperty(DbLoadgenProperties.WORKLOAD_CONFIG_FILE);
     WorkloadConfig workloadConfig = workloadConfigList.getWorkloadConfigByName(workloadName);
