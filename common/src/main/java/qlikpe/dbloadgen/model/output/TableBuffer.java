@@ -42,12 +42,12 @@ public class TableBuffer extends OutputBuffer {
         return formattedRow.toString();
     }
 
-    private String formatHtmlRow(String tag, String row) {
+    private String formatHtmlRow(String tag, String args, String row) {
         StringBuilder formattedRow = new StringBuilder();
         String[] cols = row.split(",");
         formattedRow.append("<tr>");
         for (String col : cols) {
-            formattedRow.append(String.format("<%s>%s</%s>", tag, col, tag));
+            formattedRow.append(String.format("<%s %s>%s</%s>", tag, args, col, tag));
         }
         formattedRow.append("</tr>");
         return formattedRow.toString();
@@ -76,22 +76,36 @@ public class TableBuffer extends OutputBuffer {
 
     /**
      * Return the buffer formatted as HTML.
+     * @param height the height of the table body.
      * @return a String containing the lines to be output.
      */
-    public String asHtml() {
+    public String asHtml(String height) {
         StringBuilder builder = new StringBuilder();
+        int numCols = buffer.get(0).getLine().split(",").length;
+        String colClass;
+        switch(numCols) {
+            case 1: colClass = "col-12"; break;
+            case 2: colClass = "col-6"; break;
+            case 3: colClass = "col-4"; break;
+            case 4: colClass = "col-3"; break;
+            case 5:
+            case 6: colClass = "col-2"; break;
+            default: colClass = "col-1"; break;
+        }
+
         builder.append("<h3 style=\"color: #006580\">").append(getDescription()).append("</h3>");
-        builder.append("<div class=\"tableFixHead\">");
-        builder.append("<table class=\"table table-bordered\">");
-        builder.append("<thead>").append("<tr>");
-        builder.append(formatHtmlRow("th", buffer.get(0).getLine()));
-        builder.append("</tr>").append("</thead>").append("<tbody>");
+        //builder.append("<div>");
+
+        builder.append("<table  class=\"table table-fixed\">");
+        builder.append("<thead>");
+        builder.append(formatHtmlRow("th", String.format("scope=\"col\" class=\"%s\"", colClass), buffer.get(0).getLine()));
+        builder.append("</thead>").append(String.format("<tbody style=\"height: %s\">", height));
         for(int i = 1; i < buffer.size(); i++) {
-            builder.append(formatHtmlRow("td", buffer.get(i).getLine()));
+            builder.append(formatHtmlRow("td",  String.format("class=\"%s\"", colClass), buffer.get(i).getLine()));
         }
         builder.append("</tbody>").append("</table>");
-        builder.append("</div>");
-        builder.append(HTML_BREAK);
+        //builder.append("</div>");
+        //builder.append(HTML_BREAK);
 
         return builder.toString();
     }

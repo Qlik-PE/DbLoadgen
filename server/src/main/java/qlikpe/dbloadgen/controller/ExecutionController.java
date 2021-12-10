@@ -48,6 +48,8 @@ public final class ExecutionController {
   private final DbLoadgenProperties dbLoadgenProperties;
   private final WorkloadConfigList workloadConfigList;
   private final WorkloadService workloadService;
+  private String tableHeight;
+
 
   @Autowired
   public ExecutionController(ApplicationContext context,
@@ -116,17 +118,25 @@ public final class ExecutionController {
     WorkloadManager workloadManager = workloadService.getWorkloadManager();
 
     OutputBuffer preloadStats = OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.PRELOAD_STATS);
+    OutputBuffer runtimeStats = OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.RUNTIME_STATS);
+
     if (preloadStats != null) {
+      if (runtimeStats != null)
+        tableHeight = "150px";
+      else tableHeight = "400px";
       preloadResults = new StringBuilder();
       workloadService.refreshPreloadStats();
-      buildResults(preloadResults, preloadStats);
+      buildResults(preloadResults, preloadStats, tableHeight);
       model.addAttribute("preloadResults", preloadResults.toString());
     }
-    OutputBuffer runtimeStats = OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.RUNTIME_STATS);
     if (runtimeStats != null) {
+      if (preloadStats != null)
+        tableHeight = "150px";
+      else tableHeight = "400px";
+
       cdcResults = new StringBuilder();
       workloadService.refreshRuntimeStats();
-      buildResults(cdcResults, runtimeStats);
+      buildResults(cdcResults, runtimeStats, tableHeight);
       model.addAttribute("cdcResults", cdcResults.toString());
     }
     model.addAttribute("executingCommand", workloadManager.getExecutingCommand().get());
@@ -134,9 +144,9 @@ public final class ExecutionController {
       // only display this stuff if we aren't displaying table information.
       results = new StringBuilder();
 
-      buildResults(results, OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.TEST_CONNECTION));
-      buildResults(results, OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.CLEANUP));
-      buildResults(results, OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.INITIALIZE_SCHEMA));
+      buildResults(results, OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.TEST_CONNECTION), "");
+      buildResults(results, OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.CLEANUP), "");
+      buildResults(results, OutputBufferMap.getInstance().getOutputBufferByName(OutputBufferMap.INITIALIZE_SCHEMA), "");
       model.addAttribute("results", results.toString());
     }
     if (workloadManager.isInitializingSchema()) {
@@ -182,11 +192,12 @@ public final class ExecutionController {
   /**
    * Append an output buffer to the execution results if the buffer exists.
    * @param builder an instance of StringBuilder.
+   * @param height the height of the div.
    * @param outputBuffer the OutputBuffer to work with.
    */
-  private void buildResults(StringBuilder builder, OutputBuffer outputBuffer) {
+  private void buildResults(StringBuilder builder, OutputBuffer outputBuffer, String height) {
     if (outputBuffer != null) {
-      builder.append(outputBuffer.asHtml());
+      builder.append(outputBuffer.asHtml(height));
     }
   }
 

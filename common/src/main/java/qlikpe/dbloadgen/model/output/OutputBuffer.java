@@ -109,7 +109,8 @@ public abstract class OutputBuffer {
 
     /**
      * Return the buffer formatted as HTML for output to a browser.
+     * @param height the height of the containing div.
      * @return the data to be output.
      */
-    public abstract String asHtml();
+    public abstract String asHtml(String height);
 }

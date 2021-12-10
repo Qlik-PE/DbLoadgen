@@ -38,9 +38,10 @@ public class TextBuffer extends OutputBuffer {
 
     /**
      * Return the buffer formatted as HTML.
+     * @param height the height of the containing div.
      * @return a String containing the lines to be output.
      */
-    public String asHtml() {
+    public String asHtml(String height) {
         String color;
         StringBuilder builder = new StringBuilder();
         builder.append("<h3 style=\"color: #006580\">").append(getDescription()).append("</h3>");

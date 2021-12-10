@@ -11,13 +11,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-.tableFixHead {
+
+.table-fixed tbody {
+    height: 300px;
     overflow-y: auto;
-    height: 150px;
+    width: 100%;
 }
-.tableFixHead thead th {
-    position: sticky;
-    top: 0;
+
+.table-fixed thead,
+.table-fixed tbody,
+.table-fixed tr,
+.table-fixed td,
+.table-fixed th {
+    display: block;
+}
+
+.table-fixed tbody td,
+.table-fixed tbody th,
+.table-fixed thead > tr > th {
+    float: left;
+    position: relative;
+
+
 }
 
 .clearing {

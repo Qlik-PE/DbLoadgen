@@ -144,7 +144,7 @@ public class OutputBufferMap {
      * @return the data formatted for output.
      */
     public String asHtml(String name) {
-        return map.get(name).asHtml();
+        return map.get(name).asHtml("");
     }
 
     /**
