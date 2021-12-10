@@ -35,4 +35,6 @@ pushlatest:
 
 push: pushversion pushlatest 
 
+docker-release: rebuild latest push
+
 
