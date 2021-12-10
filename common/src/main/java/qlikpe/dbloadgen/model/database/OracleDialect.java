@@ -36,7 +36,7 @@ public class OracleDialect extends Database {
      */
     public OracleDialect(String databaseType) {
         super();
-        LOG.debug("OracleDialect() constructor: Database Type: {}", databaseType);
+        LOG.trace("OracleDialect() constructor: Database Type: {}", databaseType);
         setDatabaseType(databaseType);
     }
 

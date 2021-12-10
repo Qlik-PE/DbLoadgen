@@ -28,7 +28,7 @@ public class MySqlDialect extends Database {
      */
     public MySqlDialect(String databaseType) {
         super();
-        LOG.debug("MySqlDialect() constructor: Database Type: {}", databaseType);
+        LOG.trace("MySqlDialect() constructor: Database Type: {}", databaseType);
         setDatabaseType(databaseType);
     }
 

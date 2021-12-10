@@ -35,7 +35,7 @@ public class SqlServerDialect extends Database {
      */
     public SqlServerDialect(String databaseType) {
         super();
-        LOG.debug("SqlServerDialect() constructor: Database Type: {}", databaseType);
+        LOG.trace("SqlServerDialect() constructor: Database Type: {}", databaseType);
         setDatabaseType(databaseType);
     }
 

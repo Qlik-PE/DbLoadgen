@@ -148,12 +148,19 @@ public class WorkloadService {
     public boolean isParsingMetadata() { return workloadManager.isParsingMetadata(); }
 
     /**
+     * Checks if the "stopThreads" flag has been set.
+     * @return true if we are stopping (or stopped), false otherwise.
+     */
+    public boolean stopping() { return workloadManager.isStopThreads(); }
+
+    /**
      * Lets us know if we are currently initializing the database schema.
      * @return true if we are, false otherwise.
      */
     public boolean isInitializingSchema() { return workloadManager.isInitializingSchema(); }
 
     public boolean executionInProgress() {
-        return isPreloadRunning() || isCdcTestExecuting() || isParsingMetadata() || isInitializingSchema();
+        return !stopping() &&
+                (isPreloadRunning() || isCdcTestExecuting() || isParsingMetadata() || isInitializingSchema());
     }
 }

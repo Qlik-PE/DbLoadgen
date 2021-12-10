@@ -31,6 +31,7 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,6 +43,7 @@ public class WorkloadManager {
 
     private final DbLoadgenProperties dbLoadgenProperties;
     private final OutputBufferMap outputBufferMap;
+    private final int latchTimeout = 30;
     private DatabaseConnection databaseConnection;
     private Database database;
     private String connectionName;
@@ -60,6 +62,7 @@ public class WorkloadManager {
     private int schemaInitPct = 0;
     private String databaseType;
     private DataTypeMapper dataTypeMapper;
+    private CountDownLatch countdownLatch;
     private boolean preloadRunning = false;
     private boolean cdcTestRunning = false;
     private boolean parsingMetadata = false;
@@ -252,6 +255,11 @@ public class WorkloadManager {
                     LOG.error("initSchema(): No tables defined to initialize");
                 else LOG.debug("initSchema: initializing {} tables", tables.size());
                 for (Table table : tables) {
+                    if (stopThreads) {
+                        LOG.debug("initSchema(): stopThreads detected. Exiting.");
+                        initializingSchema =  false;
+                        return false;
+                    }
                     LOG.debug("initSchema(): initializing table {}", table.getName());
                     if (!database.createTable(connection, table))
                         failures++;
@@ -296,6 +304,11 @@ public class WorkloadManager {
             String schemaName = workloadConfig.getSchema();
 
             for (Table table : tables) {
+                if (stopThreads) {
+                    LOG.debug("cleanup(): stopThreads detected. Exiting.");
+                    return false;
+                }
+
                 if (!database.dropTable(connection, table))
                     errorCount++;
             }
@@ -329,21 +342,21 @@ public class WorkloadManager {
 
         preloadRunning = true;
         stopThreads = false;
-        CountDownLatch latch = new CountDownLatch(numTables);
+        countdownLatch = new CountDownLatch(numTables);
         executor = Executors.newFixedThreadPool(preloadWorkers);
         for (Table table : tables) {
             if (stopThreads)
                 break;
             String threadName = String.format("preload-%s", table.getName());
-            executor.execute(new Thread(new PreloadThread(threadName, latch, workloadConfig,
+            executor.execute(new Thread(new PreloadThread(threadName, countdownLatch, workloadConfig,
                     databaseType, connectionInfo, table)));
         }
         executor.shutdown();  // we are done adding threads
         // track thread completion stats
-        while(latch.getCount() > 0) {
+        while(countdownLatch.getCount() > 0) {
             if (stopThreads)
                 break;
-            preloadedTables = numTables - (int)latch.getCount();
+            preloadedTables = numTables - (int)countdownLatch.getCount();
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
@@ -352,8 +365,11 @@ public class WorkloadManager {
         }
         // now wait for all threads to exit.
         try {
-            LOG.debug("preloadTables(): waiting for preload countdown latch. Count {}", latch.getCount());
-            latch.await();
+            LOG.debug("preloadTables(): waiting for preload countdown latch. Count {}", countdownLatch.getCount());
+            if (!countdownLatch.await(latchTimeout, TimeUnit.SECONDS)){
+                LOG.warn("preloadTables(): countdownLatch.await() expired before threads ended: count: {}",
+                        countdownLatch.getCount());
+            } else LOG.debug("preloadTables(): table load countdown latch await: threads finished");
             preloadedTables = numTables;
         } catch (InterruptedException ex) {
             LOG.warn("preloadTables(): interrupt received during latch wait", ex);
@@ -386,13 +402,13 @@ public class WorkloadManager {
 
         stopThreads = false;
         cdcTestRunning = true;
-        CountDownLatch latch = new CountDownLatch(workers);
+        countdownLatch = new CountDownLatch(workers);
         executor = Executors.newCachedThreadPool();
         for (currentWorker = 0; currentWorker < workers; currentWorker++) {
             if (stopThreads)
                 break;
             String threadName = String.format("worker-%d", currentWorker);
-            Thread t = new Thread(new WorkerThread(threadName, latch,
+            Thread t = new Thread(new WorkerThread(threadName, countdownLatch,
                     workloadConfig, databaseType, connectionInfo, workerTables.get(currentWorker)));
             //Timer timer = new Timer(threadName);
             //timer.schedule(new WorkerTimeoutTask(threadName, t, timer), duration);
@@ -416,8 +432,10 @@ public class WorkloadManager {
             LOG.debug("cdcTest: leaving duration loop");
 
             // now wait for all threads to exit.
-            latch.await();
-            LOG.debug("cdcTest(): latch.await() triggered");
+            if (!countdownLatch.await(latchTimeout, TimeUnit.SECONDS)){
+                LOG.warn("cdcTest(): countdownLatch.await() expired before threads ended: count: {}",
+                        countdownLatch.getCount());
+            } else LOG.debug("cdcTest(): table load countdown latch await: threads finished");
         } catch (InterruptedException ex) {
             LOG.warn("cdcTest(): interrupt received during runtime latch wait", ex);
         }
@@ -434,7 +452,11 @@ public class WorkloadManager {
         LOG.info("stopThreads(): sending stop to all threads");
         stopThreads = true;
         if (executor != null) {
-            executor.shutdownNow();
+            List<Runnable> pending = executor.shutdownNow();
+            for(int i=0; i < pending.size(); i++) {
+                // these threads were created, but not yet executed. Cleanup the latch.
+                countdownLatch.countDown();
+            }
             executor = null;
         }
     }
@@ -586,7 +608,7 @@ public class WorkloadManager {
 
     private boolean readTableInfo() {
         AtomicInteger errors = new AtomicInteger();
-        CountDownLatch countdownLatch = new CountDownLatch(workloadConfig.getTables().size());
+        countdownLatch = new CountDownLatch(workloadConfig.getTables().size());
         parsingMetadata = true;
 
         tableMetadataParsed.set(0);
@@ -606,14 +628,18 @@ public class WorkloadManager {
         }
         executor.shutdown();
         try {
-            countdownLatch.await();
-            LOG.debug("table load countdown latch await: threads finished");
+            if (!countdownLatch.await(latchTimeout, TimeUnit.SECONDS)){
+                LOG.warn("readTableInfo(): countdownLatch.await() expired before threads ended: count: {}",
+                        countdownLatch.getCount());
+            } else LOG.debug("readTableInfo(): table load countdown latch await: threads finished");
         } catch (InterruptedException e) {
-            LOG.info("table load countdown latch interrupted: {}", e.getMessage());
+            LOG.info("readTableInfo(): table load countdown latch interrupted: {}", e.getMessage());
         }
         parsingMetadata = false;
-        stopThreads = false;
-        return errors.get() == 0;
+        if (stopThreads) {
+            stopThreads = false;
+            return false;
+        } else return errors.get() == 0;
     }
 
     /**

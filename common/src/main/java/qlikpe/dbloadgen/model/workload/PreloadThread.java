@@ -22,10 +22,10 @@ public class PreloadThread implements Runnable {
     private final String threadName;
     private final CountDownLatch latch;
     private final Database database;
-    private final BatchTransaction batchTransaction;
-    private final Connection connection;
     private final Table table;
     private final WorkloadConfig workloadConfig;
+    private final String databaseType;
+    private final Properties connectionInfo;
 
     /**
      * Construct the worker thread.
@@ -45,9 +45,8 @@ public class PreloadThread implements Runnable {
         this.workloadConfig = workloadConfig;
 
         this.database = Database.databaseFactory(databaseType);
-        DatabaseConnection databaseConnection = new DatabaseConnection(databaseType, connectionInfo);
-        this.connection = databaseConnection.connect();
-        this.batchTransaction = new BatchTransaction(connection, workloadConfig.getPreloadBatchSize());
+        this.databaseType = databaseType;
+        this.connectionInfo = connectionInfo;
     }
 
     /**
@@ -79,7 +78,9 @@ public class PreloadThread implements Runnable {
     @Override
     public void run() {
         LOG.debug("Starting preload thread: {}", threadName);
-
+        DatabaseConnection databaseConnection = new DatabaseConnection(databaseType, connectionInfo);
+        Connection connection = databaseConnection.connect();
+        BatchTransaction batchTransaction = new BatchTransaction(connection, workloadConfig.getPreloadBatchSize());
         try {
             String tableName = table.getName();
             long rowCount = database.countRows(connection, table);

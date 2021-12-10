@@ -58,9 +58,9 @@ public class DatabaseConnection {
             Class.forName(jdbcDriver);
 
             // open a connection
-            LOG.debug("Connecting to database: " + url);
+            LOG.trace("Connecting to database: " + url);
             connection = DriverManager.getConnection(url, userName, password);
-            LOG.debug("Successfully connected to database: " + url);
+            LOG.trace("Successfully connected to database: " + url);
             connectionStatus = "connected";
         } catch (ClassNotFoundException e) {
             LOG.error("Class Not Found exception", e);
