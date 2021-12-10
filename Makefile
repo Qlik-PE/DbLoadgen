@@ -29,7 +29,4 @@ release:
 	cp  $(serverjar) $(zipdir)/dbloadgen/server/
 	cd $(zipdir) && zip -r dbloadgen.zip ./dbloadgen
 
-image:
-	@echo "*** building dbloadgen docker image"
-	docker build --file Dockerfile --build-arg installfile=$(jarfile) -t $(image):6.6 .
 
