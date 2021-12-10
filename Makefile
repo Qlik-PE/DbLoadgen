@@ -7,7 +7,7 @@ zipdir=release
 
 rebuild: clean common package
 
-.PHONY: release common
+.PHONY: release common docker
 
 clean:
 	mvn clean
@@ -29,4 +29,5 @@ release:
 	cp  $(serverjar) $(zipdir)/dbloadgen/server/
 	cd $(zipdir) && zip -r dbloadgen.zip ./dbloadgen
 
-
+docker:
+	cd docker && make docker-release
