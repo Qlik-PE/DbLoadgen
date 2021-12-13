@@ -33,6 +33,7 @@ public class TableConfig {
     private String name;
     private String preload; // "data" or number of rows to generate.
     private String updateColumns;
+    private OperationPct operationPct;  // optional: will default to WorkloadConfig pct.
     private Table parent;
 
     @Getter(lazy=true, onMethod = @__({@SuppressWarnings("unchecked")}))

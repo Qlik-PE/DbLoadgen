@@ -87,6 +87,10 @@ tables:
    - name: table1
      preload: data
      updateColumns: "G,W,L"
+     operationPct:
+       insert: 80
+       update: 15
+       delete: 5
    - name: table2
      preload: data
      updateColumns: "active,NAassoc"
@@ -135,6 +139,9 @@ is ignored even if it is present.
 any update operations. New values for these columns will be randomly generated. Note
 that if *updateColumns* is empty, then the table will be loaded, but omitted from participation
 in random generation of CDC load.
+  * **operationPct**: optionally, you can specify the distribution of operations on a
+table-by-table basis. If not specified, the distribution of operations for a table will
+be based on the values specified for the workload as described above.
 
 ### Table Metadata
 

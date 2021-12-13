@@ -28,9 +28,6 @@ public class WorkerThread implements Runnable {
     private final List<Table> tables;
     private final int numTables;
     private final int threadSleep;  // delay between operations
-    private final int insertPct;
-    private final int updatePct;
-    private final int totalPct;
 
     /**
      * Construct the worker thread.
@@ -54,10 +51,7 @@ public class WorkerThread implements Runnable {
 
         this.batchTransaction = new BatchTransaction(connection,
                 workloadConfig.getWorkerBatchSize(), workloadConfig.getWorkerBatchSleep());
-        this.insertPct = workloadConfig.getOperationPct().getInsert();
-        this.updatePct = workloadConfig.getOperationPct().getUpdate();
-        int deletePct = workloadConfig.getOperationPct().getDelete();
-        this.totalPct = this.insertPct + this.updatePct + deletePct;
+
 
         // need our own copy of each table for concurrency reasons.
         this.tables = new ArrayList<>();
@@ -86,10 +80,16 @@ public class WorkerThread implements Runnable {
     /**
      * Return a randomly selected operation based on a distribution of insert, update,
      * and delete operations.
+     * @param table the table we are generating an operation for.
      * @return a database operation type.
      */
-    public Database.OperationType getRandomOperation() {
+    public Database.OperationType getRandomOperation(Table table) {
         Database.OperationType operationType;
+
+        int insertPct = table.getTableConfig().getOperationPct().getInsert();
+        int updatePct = table.getTableConfig().getOperationPct().getUpdate();
+        int deletePct = table.getTableConfig().getOperationPct().getDelete();
+        int totalPct = insertPct + updatePct + deletePct;
 
         int value = ThreadLocalRandom.current().nextInt(0, totalPct);
         if (value < insertPct)
@@ -108,7 +108,7 @@ public class WorkerThread implements Runnable {
             try {
                 String operation;
                 Table table = getRandomTable();
-                Database.OperationType operationType = getRandomOperation();
+                Database.OperationType operationType = getRandomOperation(table);
                 switch(operationType) {
                     case INSERT:
                         operation = "INSERT";

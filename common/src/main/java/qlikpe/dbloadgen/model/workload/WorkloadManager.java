@@ -619,6 +619,21 @@ public class WorkloadManager {
             if (stopThreads)
                 break;
 
+            // set default (global) percentages if not overridden in the config for the table.
+            if (tableConfig.getOperationPct() == null) {
+                LOG.debug("readTableInfo(): setting operation distribution for table {} to global I({}) U({}) D({})",
+                        tableConfig.getName(),
+                        workloadConfig.getOperationPct().getInsert(),
+                        workloadConfig.getOperationPct().getUpdate(),
+                        workloadConfig.getOperationPct().getDelete());
+                tableConfig.setOperationPct(workloadConfig.getOperationPct());
+            } else {
+                LOG.info("readTableInfo(): setting operation distribution for table {} to I({}) U({}) D({})",
+                        tableConfig.getName(),
+                        tableConfig.getOperationPct().getInsert(),
+                        tableConfig.getOperationPct().getUpdate(),
+                        tableConfig.getOperationPct().getDelete());
+            }
             executor.execute(new Thread(() -> {
                 boolean rval = readTableMetadata(tableConfig);
                 if (!rval) errors.getAndIncrement();

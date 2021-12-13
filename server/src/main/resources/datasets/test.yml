@@ -17,6 +17,10 @@ tables:
    - name: table1
      preload: data
      updateColumns: "G,W,L"
+     operationPct:
+       insert: 80
+       update: 15
+       delete: 5
    - name: table2
      preload: data
      updateColumns: "active,NAassoc"
