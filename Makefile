@@ -18,7 +18,7 @@ common:
 package:
 	mvn package
 
-release:
+release: rebuild
 	rm -rf $(zipdir)/*
 	mkdir -p $(zipdir)/dbloadgen/cli/
 	mkdir -p $(zipdir)/dbloadgen/server/
