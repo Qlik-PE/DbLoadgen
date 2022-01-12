@@ -126,7 +126,7 @@
                                        value="${workload.getPreloadThreads()}"></td>
                         </tr>
                         <tr>
-                            <td><label for="preloadBatchSize"><i class="fa fa-cogs"></i>&nbsp;&nbsp;CDC Batch
+                            <td><label for="preloadBatchSize"><i class="fa fa-cogs"></i>&nbsp;&nbsp;Preload Batch
                                     Size</label></td>
                             <td><input type="text" id="preloadBatchSize" name="preloadBatchSize"
                                        value="${workload.getPreloadBatchSize()}"></td>
