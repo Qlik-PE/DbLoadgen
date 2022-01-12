@@ -14,6 +14,7 @@
 package qlikpe.dbloadgen.model.output;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class OutputBuffer {
@@ -56,7 +57,7 @@ public abstract class OutputBuffer {
     public OutputBuffer(String name) {
         this.name = name;
         this.description = "not set";
-        buffer = new ArrayList<>();
+        buffer = Collections.synchronizedList(new ArrayList<>());
     }
 
     /**
