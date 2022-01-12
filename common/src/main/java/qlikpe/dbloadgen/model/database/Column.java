@@ -243,7 +243,7 @@ public class Column {
                     length = Integer.parseInt(initializerArgs[2]);
                 } else {
                     type = RandomString.Type.ALPHANUMERIC;
-                    length = 8;
+                    length = 10;
                 }
                 ((RandomString) randomizer).configure(type, length);
                 break;

@@ -300,6 +300,7 @@ with a value between 1890 and 2021. **Note that initializer names are case-sensi
 * **RandomString**: return a random string. All characters in the string are
 randomly selected. This is suitable for use in key columns.
   * Usage: RandomString - generate an alphanumeric string of length 10. 
+  * Usage: RandomString,*length* - generate an alphanumeric string of the specified length. 
   * RandomString,*type*,*length* - generate a string of the specified length where type is one of
      * UPPER: generate an uppercase string
      * LOWER: generate a lowercase string
