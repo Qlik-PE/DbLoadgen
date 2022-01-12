@@ -120,6 +120,8 @@ public class RandomString implements Initializer {
         buffer.append(String.format("RandomString: return a random string. All characters in the string are%n"));
         buffer.append(String.format("\trandomly selected. This is suitable for use in key columns.%n"));
         buffer.append(String.format("\tUsage: RandomString - generate an alphanumeric string of length 10. %n"));
+        buffer.append(String.format("\t       RandomString,<length> - generate an alphanumeric string %n"));
+        buffer.append(String.format("\t            of the specified length %n"));
         buffer.append(String.format("\t       RandomString,<type>,<length> - generate a string of the %n"));
         buffer.append(String.format("\t            specified length where type is one of %n"));
         buffer.append(String.format("\t            UPPER, LOWER, ALPHA, NUMERIC, ALPHANUMERIC,  or ALL%n"));
