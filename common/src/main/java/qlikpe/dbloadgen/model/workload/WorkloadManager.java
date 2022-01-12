@@ -675,12 +675,12 @@ public class WorkloadManager {
             InputStream is;
             try {
                 // look in the dataset directory.
-                fileName = String.format("%s/%s/%s.yml", datasetDir, runtimeConfig, tableConfig.getName());
+                fileName = String.format("%s/%s/%s.yml", datasetDir, workloadConfig.getDataset(), tableConfig.getName());
                 is = getFileAsInputStream(fileName);
             } catch (FileNotFoundException e) {
                 // that didn't work, so look in the classpath
                 LOG.info("looking for dataset in classpath resources: {}", fileName);
-                fileName = String.format("%s/%s/%s.yml", resourceDir, runtimeConfig, tableConfig.getName());
+                fileName = String.format("%s/%s/%s.yml", resourceDir, workloadConfig.getDataset(), tableConfig.getName());
                 is = getFileFromResourceAsStream(fileName);
             }
             Yaml yaml = new Yaml(new Constructor(Table.class));
