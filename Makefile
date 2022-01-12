@@ -22,8 +22,8 @@ release: rebuild
 	rm -rf $(zipdir)/*
 	mkdir -p $(zipdir)/dbloadgen/cli/
 	mkdir -p $(zipdir)/dbloadgen/server/
-	cp $(scripts) $(zipdir)/dbloadgen
-	cp $(testscripts) $(zipdir)/dbloadgen
+	cd scripts; cp $(scripts) ../$(zipdir)/dbloadgen
+	cd scripts; cp $(testscripts) ../$(zipdir)/dbloadgen
 	cp -R ./datasets $(zipdir)/dbloadgen
 	cp  $(clijar) $(zipdir)/dbloadgen/cli/
 	cp  $(serverjar) $(zipdir)/dbloadgen/server/
