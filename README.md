@@ -1,12 +1,12 @@
 # DbLoadgen: A Scalable Solution for Generating Transactional Load Against a Database
 
 DbLoadgen is scalable solution for generating transactional loads against a database,
-perhaps must useful for testing CDC tools such as Qlik Replicate. Focus is on generating
+perhaps most useful for testing CDC tools such as Qlik Replicate. Focus is on generating
 a random series of INSERT, UPDATE, and DELETE statements across the tables that make up
 the dataset being tested, not in generating a true OLTP-load as one might see in an
 implementation of a benchmark such as TPC-C.
 
-DbLoadgen is somewhat different from other open source tools that can be found in that it
+DbLoadgen is somewhat different from other open-source tools that can be found in that it
 is designed to be extremely flexible. In particular:
 
 * DbLoadgen is metadata-driven, meaning that all the data structures 
@@ -30,7 +30,7 @@ real-life content such as social security numbers, credit card numbers, etc.
 DbLoadgen is written in Java and provides several mechanisms for configuring and initiating workloads:
 
 * Controlling a workload directly from the command line
-* Starting and controlling a workload using an HTML- and Javascript-based GUI.
+* Starting and controlling a workload using an HTML- and JavaScript-based GUI.
 * Controlling a workload using REST API calls (still to be developed).
 
 This image represents a high-level view of the object model for the workload manager.
@@ -47,7 +47,7 @@ interacting with a target database.
 
 As mentioned earlier, DbLoadgen was designed to support a variety of database targets:
 
-* H2: An in memory database useful for low volume testing of configurations, etc.
+* H2: An in-memory database useful for low volume testing of configurations, etc.
 * MySQL 
 * SQL Server
 * PostgreSQL
@@ -62,8 +62,8 @@ is responsible for generating the appropriate SQL dialect for the target databas
 ### Workload Metadata
 
 A workload metadata file is used to configure the execution of a test. It defines
-items such as the number of worker threads, the dataset and associated tables to 
-use, the duration of the test, and more. The metadata is expressed in YAML format as 
+items such as the number of worker threads; the dataset and associated tables to 
+use; the duration of the test; and more. The metadata is expressed in YAML format as 
 shown in the following example. Note that all properties are required. The tables 
 section identifies a list of tables that should be part of the test.
 
@@ -108,7 +108,7 @@ the test.
 * **preloadThreads**: the number of threads to have running in parallel during database
 initialization. A thread is responsible for loading a table. When a table has been 
 initialized, the thread will terminate and another thread will take its place to load
-the next table and so on until all tables have been initialized.
+the next table, and so on until all tables have been initialized.
 * **preloadBatchSize**: the size of each batch of inserts to a table during the preload phase.
 * **workerBatchSize**: the number of random operations (insert/update/delete) that should
 be generated before each worker thread commits a transaction.
@@ -133,7 +133,7 @@ a subset of tables from the directory, or all of the tables.
   * **preload**: identifies the source of the data to use to preload each table. The value may
 be *data*, which indicates that the initialization data can be found in the *data* section
 of the table metadata, or it may be an integer which will indicate the number of rows to 
-generate automatically. If the value is an integer then the data section in the table metadata
+generate automatically. If the value is an integer, then the data section in the table metadata
 is ignored even if it is present.
   * **updateColumns**: the name(s) of the column(s) that should be modified as a part of
 any update operations. New values for these columns will be randomly generated. Note
@@ -290,9 +290,9 @@ overridden by a column initializer.
 
 ### Column Initializers
 
-There are a number of initializers that may be used to generate column values during insert
+There are quite a few initializers that may be used to generate column values during insert
 and update operations. Initializers and their associated arguments that define their behavior
-as specified as YAML strings containing comma-delimited values in the table metadata.
+are specified as YAML strings containing comma-delimited values in the table metadata.
 
 For example: `initializer: "SignedInteger,1890,2021"` says to generate a random integer
 with a value between 1890 and 2021. **Note that initializer names are case-sensitive.**
@@ -320,8 +320,8 @@ might be defined as `####-####-####-####`. Subpatterns are defined as follows, a
 is used in sequence as in the credit card number example, they are treated as a single subpattern:
   * Usage: Pattern,*template*: 
     * **#**: a numeric value.
-    * **@**: a lower case alphabetic character.
-    * **^**: an upper case alphabetic character.
+    * **@**: a lowercase alphabetic character.
+    * **^**: an uppercase alphabetic character.
     * **%**: a random alphanumeric character.
     * **\***: any random character.
     * any other characters are treated as a literal.
@@ -332,7 +332,6 @@ example of implementing a specialized type derived from *Pattern*.
   * Usage: SSN
 * **PaddedInteger**: return a random integer padded on the left with zeros if necessary.
   * Usage: PaddedInteger,*length*
-UPPER, LOWER, ALPHA, NUMERIC, ALPHANUMERIC,  or ALL
 * **UnsignedInteger**: return a random integer value >= zero
   * Usage: UnsignedInteger - any random integer >= zero 
   * Usage: UnsignedInteger,min,max - a random integer in the specified range 
@@ -405,7 +404,7 @@ All fields are required:
 
 * **name**: is the name of the connection as referred to on the command line 
 * **databaseType**: specifies the database dialect to use.
-* **jdbcDriver**: specifies the jdbc driver entry point for this database.
+* **jdbcDriver**: specifies the JDBC driver entry point for this database.
 * **url**: this is the database connection URL. It is used verbatim.
 * **username**: the database username to connect with. This user must have sufficient 
 privileges to create schemas and tables, as well as read and write them.
@@ -426,8 +425,8 @@ usage: DbLoadgenCLI [-h] [--dataset-dir DATASET_DIRECTORY] [--workload-config DA
 This utility generates user-configurable loads against a database.
 
 positional arguments:
-  COMMAND                The runtime command to  execute:  [test-connection, preload, help-commands,
-                         end-to-end,  help-initializers,  cleanup,  list-connections,  reset,  
+  COMMAND                The runtime command to execute: [test-connection, preload, help-commands,
+                         end-to-end, help-initializers, cleanup, list-connections, reset, 
                          list-workloads, run, init]
 
 named arguments:
@@ -435,14 +434,14 @@ named arguments:
   --dataset-dir DATASET_DIRECTORY
                          The directory where the source dataset(s) are stored
   --workload-config DATASET
-                         The name of the  runtime  workload  configuration  yaml  file  to use. This
+                         The name of the runtime workload configuration yaml file to use. This
                          should be located in the DATA_DIRECTORY.
   --connection-list CONNECTION_LIST
-                         The name of yaml file  that  contains  a  list of database connections that
+                         The name of yaml file that contains a list of database connections that
                          have been defiled. This should be located in the DATA_DIRECTORY.
   --connection-name CONNECTION_NAME
                          The name of the connection from the connection yaml to use.
-  --user USER_NAME       The database user name.
+  --user USER_NAME       The database username.
   --password PASSWORD    The password for the database user
   --url JDBC_URL         The database JDBC connection URL.
   --jdbc-driver JDBC_DRIVER
@@ -562,7 +561,7 @@ You can find a public image here:
 
 https://hub.docker.com/repository/docker/attunitypm/dbloadgen
 
-### Execute Docker From the command line
+### Execute Docker from the command line
 
 You can run the docker image directly from the command line. If you want to provide your own
 datasets, connections, and workloads, you will need to mount your local datasets directory as
@@ -644,10 +643,10 @@ Maven is required as well.
 * Build the common library that holds DbLoadgen's core functionality, which is shared across 
 both the CLI and Server: `mvn -pl common install`.
 * Build DbLoadgen server and CLI modules: `mvn package`. Note that the common library must be built 
-prior to executing the *package* goal in order for any changes made there to be picked up
+prior to executing the *package* goal to ensure that any changes made there to be picked up
 in the CLI and Server.
 
-Being a little old school, we have also included a `Makefile`. Assuming that you have `gmake` installed
+Being a little old school, we have also included a `Makefile`. Assuming you have `gmake` installed
 in your environment, you can execute:
 
 * `make` or `make rebuild` to perform a full clean and rebuild of the code.
