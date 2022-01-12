@@ -166,9 +166,7 @@ public class Column {
                     case 2:
                         precision = Integer.parseInt(initializerArgs[1]);
                         scale = Integer.parseInt(initializerArgs[2]);
-                        min = 0;
-                        max = 1 ^ (precision - scale);
-                        ((RandomDecimal) randomizer).configure(precision, scale, min, max);
+                        ((RandomDecimal) randomizer).configure(precision, scale);
                         break;
                     default:
                         break;

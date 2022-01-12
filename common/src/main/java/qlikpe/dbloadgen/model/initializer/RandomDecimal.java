@@ -64,7 +64,7 @@ public class RandomDecimal implements Initializer {
      * @param min the minimum value to generate
      * @param max the maximum value to generate
      */
-    public RandomDecimal(int precision, int scale, int min, int max) {
+    public RandomDecimal(int precision, int scale, long min, long max) {
         if (scale > precision)
             throw new RuntimeException(String.format("invalid precision/scale specified: precision(%d) scale(%d)",
                     precision, scale));
@@ -74,12 +74,17 @@ public class RandomDecimal implements Initializer {
         configure(precision, scale, min, max);
     }
 
+    public void configure (int precision, int scale) {
+        configure(precision, scale, 0, (long)Math.pow(10, (precision-scale)));
+    }
+
     public void configure (int precision, int scale, long min, long max) {
         this.precision = precision;
         this.scale = scale;
         this.min = min;
         this.max = max;
         this.df = new DecimalFormat(getPattern());
+        //System.out.printf("RandomDecimal: precision(%d) scale(%d) min(%d) max(%d) %n", precision, scale, min, max);
     }
 
     /**
@@ -99,6 +104,7 @@ public class RandomDecimal implements Initializer {
         } else {
             pattern += "0";
         }
+        //System.out.printf("RandomString: pattern(%s)%n", pattern);
         return pattern;
     }
 
