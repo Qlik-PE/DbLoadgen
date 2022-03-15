@@ -22,6 +22,7 @@ spring:
       read_unknown_enum_values_as_null: true
 
 
+
 management:
   endpoints:
     web:

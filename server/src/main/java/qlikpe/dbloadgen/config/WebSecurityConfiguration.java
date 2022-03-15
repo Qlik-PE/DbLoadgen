@@ -51,6 +51,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers("/h2/**").permitAll()
                 .antMatchers("/login*").permitAll()
+                .antMatchers("/resources/**", "/static/**",
+                        "/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()
                 .anyRequest().authenticated()
               .and()
                 .formLogin()
@@ -80,6 +82,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     // don't enforce access to these static resources
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**", "/fonts/**");
+        //web.ignoring().antMatchers("/resources/**", "/static/**", "/css/**", "/js/**", "/images/**", "/fonts/**");
+
     }
 }

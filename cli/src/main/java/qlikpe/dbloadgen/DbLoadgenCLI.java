@@ -20,6 +20,7 @@ import net.sourceforge.argparse4j.inf.Namespace;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
 import org.reflections.scanners.SubTypesScanner;
 import qlikpe.dbloadgen.model.initializer.Initializer;
 import qlikpe.dbloadgen.model.workload.WorkloadInitializationException;
@@ -158,7 +159,7 @@ public class DbLoadgenCLI {
     private void getInitializerReference() {
         String separator = String.format("%n");
         Reflections reflections = new Reflections(
-                "qlikpe.dbloadgen.model.initializer", new SubTypesScanner());
+                "qlikpe.dbloadgen.model.initializer", Scanners.SubTypes);
         Set<Class<? extends Initializer>> initializers = reflections.getSubTypesOf(Initializer.class);
         StringBuilder buffer = new StringBuilder(4096);
         for(Class<? extends Initializer> clazz: initializers) {

@@ -44,6 +44,8 @@ public class DbLoadgenServer {
   private final static Logger LOG = LogManager.getLogger(DbLoadgenServer.class);
 
   public static void main(String[] args) {
+    if (args == null)
+      LOG.error("args was null");
     createApplicationBuilder()
       .run(args);
   }
@@ -60,6 +62,7 @@ public class DbLoadgenServer {
     return factory -> {
       final UndertowDeploymentInfoCustomizer customizer = deploymentInfo -> {
         var inf = new WebSocketDeploymentInfo();
+        //inf.setBuffers(new DefaultByteBufferPool(false, 64));
         inf.setBuffers(new DefaultByteBufferPool(false, 64));
         deploymentInfo.addServletContextAttribute(WebSocketDeploymentInfo.ATTRIBUTE_NAME, inf);
       };
@@ -72,7 +75,7 @@ public class DbLoadgenServer {
     return new WebMvcConfigurer() {
       @Override
       public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
-        configurer.favorPathExtension(false);
+        //configurer.favorPathExtension(false); function deprecated. setting to false no longer needed.
       }
     };
   }
