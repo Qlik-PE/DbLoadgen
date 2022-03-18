@@ -31,7 +31,6 @@ DbLoadgen is written in Java and provides several mechanisms for configuring and
 
 * Controlling a workload directly from the command line
 * Starting and controlling a workload using an HTML- and JavaScript-based GUI.
-* Controlling a workload using REST API calls (still to be developed).
 
 This image represents a high-level view of the object model for the workload manager.
 
@@ -545,12 +544,6 @@ see the outcome of the execution.
 ![DbLoadgen Init Results](images/dbloadgen-init.png "Results of an Init Command")
 
 ![Dbloadgen End-to-End Results](images/dbloadgen-run.png "Results of Preload and Run Steps")
-
-### Controlling a workload using REST API calls
-
-DbLoadgen will support interfacing via REST API calls to initialize and execute workloads.
-
-TBD  - to be completed once implemented.
 
 ## Using Docker
 
