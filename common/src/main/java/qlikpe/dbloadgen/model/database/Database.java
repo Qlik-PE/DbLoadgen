@@ -34,7 +34,7 @@ public abstract class Database {
     public enum OperationType {INSERT, UPDATE, DELETE}
 
     private static final Logger LOG = LogManager.getLogger(Database.class);
-    public static final String defaultKeyColumn = "id_";
+    protected static final String defaultKeyColumn = "id_";
     private static final String dbRandom = "dbrandom";
     private static final String randomType = "integer";
     private String databaseType;
@@ -63,44 +63,21 @@ public abstract class Database {
         switch (databaseType.toLowerCase()) {
             case "mysql":
                 database = new MySqlDialect("MySQL");
-                database.setSupportsExists(true);
-                database.setSupportsCascade(true);
-                database.setAlterTableColumnKeyword(true);
-                database.setSupportsUnsignedInts(true);
-                database.setQuoteChar('`');
                 break;
             case "h2":
                 database = new MySqlDialect("H2");
-                database.setSupportsExists(true);
-                database.setSupportsCascade(true);
-                database.setAlterTableColumnKeyword(true);
+                // override mysql default
                 database.setSupportsUnsignedInts(false);
-                database.setQuoteChar('`');
                 break;
             case "postgres":
             case "postgresql":
                 database = new PostgresDialect("PostgreSQL");
-                database.setSupportsExists(true);
-                database.setSupportsCascade(true);
-                database.setAlterTableColumnKeyword(true);
-                database.setSupportsUnsignedInts(false);
-                database.setQuoteChar('"');
                 break;
             case "oracle":
                 database = new OracleDialect("Oracle");
-                database.setSupportsExists(false);
-                database.setSupportsCascade(false);
-                database.setAlterTableColumnKeyword(false);
-                database.setSupportsUnsignedInts(false);
-                database.setQuoteChar('"');
                 break;
             case "sqlserver":
                 database = new SqlServerDialect("SQL Server");
-                database.setSupportsExists(false);
-                database.setSupportsCascade(false);
-                database.setAlterTableColumnKeyword(false);
-                database.setSupportsUnsignedInts(false);
-                database.setQuoteChar('"');
                 break;
             default:
                 String message = String.format("unrecognized database type specified: %s", databaseType);
@@ -153,7 +130,7 @@ public abstract class Database {
     }
 
     /**
-     * Indicates whether or not this database supports unsigned integer types.
+     * Indicates whether this database supports unsigned integer types.
      *
      * @param supportsUnsignedInts true if unsigned integer types are supported, false otherwise.
      */
@@ -162,14 +139,14 @@ public abstract class Database {
     }
 
     /**
-     * Indicates whether or not this database supports unsigned integer types.
+     * Indicates whether this database supports unsigned integer types.
      *
      * returns true if unsigned integer types are supported, false otherwise.
      */
     public boolean getSupportsUnsignedInts() { return supportsUnsignedInts; }
 
     /**
-     * Set the character to wrap column and table names with..
+     * Set the character to wrap column and table names with.
      *
      * @param quoteChar the character to use to surround database identifiers.
      */
@@ -241,7 +218,7 @@ public abstract class Database {
     /**
      * Add a column to the specified table that will contain a random integer.
      * This value will be used to select random rows fromm the table in question.
-     * While not as completely random, dooing it this way vs. using the database's
+     * While not as completely random, doing it this way vs. using the database's
      * builtin RANDOM() function during a select is far more efficient
      * for large tables.
      *
@@ -408,7 +385,6 @@ public abstract class Database {
             query = String.format("%s %s, ", query, autoIncrementPrimaryKey(quoteName(defaultKeyColumn)));
         }
 
-
         for (Column column : columns) {
             query = String.format("%s%s %s %s %s", query, sep, quoteName(column.getName()), column.getDatabaseType(),
                     column.isNullable() ? "" : "NOT NULL");
@@ -514,7 +490,7 @@ public abstract class Database {
      * Count the rows in a table.
      *
      * @param connection the database connection to use.
-     * @param table      the name of the table..
+     * @param table      the name of the table.
      * @return the number of rows in the table.
      */
     public long countRows(Connection connection, Table table) {
@@ -709,6 +685,21 @@ public abstract class Database {
             LOG.error("error adding query to the batch: {}", e.getMessage());
             LOG.error("query statement: {}", query);
         }
+    }
+
+    /**
+     * Randomly returns "ascending" or "descending" sort order.
+     * @return a random sort order
+     */
+    protected String randomSortOrder() {
+        // more random, less efficient option:  "SELECT %s FROM %s.%s ORDER BY RAND() LIMIT %d"
+        int val = Integer.parseInt(getUnsignedInteger().nextValue()) % 2;
+        String sortOrder;
+        if (val == 0)
+            sortOrder = "ASC";
+        else sortOrder = "DESC";
+
+        return sortOrder;
     }
 
     /* Abstract Methods Follow */

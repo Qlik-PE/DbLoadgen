@@ -30,6 +30,11 @@ public class PostgresDialect extends Database {
         super();
         LOG.debug("PostgresDialect() constructor: Database Type: {}", databaseType);
         setDatabaseType(databaseType);
+        setSupportsExists(true);
+        setSupportsCascade(true);
+        setAlterTableColumnKeyword(true);
+        setSupportsUnsignedInts(false);
+        setQuoteChar('"');
     }
 
     @Override
@@ -40,14 +45,9 @@ public class PostgresDialect extends Database {
     @Override
     public String selectRandomRows(String keyColumnNames, String schemaName, String tableName, int limit) {
         // more random, less efficient option: "SELECT %s FROM %s.%s ORDER BY RANDOM() LIMIT %d"
-        int val = Integer.parseInt(getUnsignedInteger().nextValue()) % 2;
-        String sortOrder;
-        if (val == 0)
-            sortOrder = "ASC";
-        else sortOrder = "DESC";
 
         return String.format("SELECT %s FROM %s.%s ORDER BY %s %s LIMIT %d",
-                keyColumnNames, schemaName, tableName, quoteName(getDbRandom()), sortOrder, limit);
+                keyColumnNames, schemaName, tableName, quoteName(getDbRandom()), randomSortOrder(), limit);
     }
 
 

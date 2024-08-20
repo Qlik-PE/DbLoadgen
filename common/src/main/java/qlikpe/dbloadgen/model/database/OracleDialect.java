@@ -38,6 +38,11 @@ public class OracleDialect extends Database {
         super();
         LOG.trace("OracleDialect() constructor: Database Type: {}", databaseType);
         setDatabaseType(databaseType);
+        setSupportsExists(false);
+        setSupportsCascade(false);
+        setAlterTableColumnKeyword(false);
+        setSupportsUnsignedInts(false);
+        setQuoteChar('"');
     }
 
     /**
@@ -75,14 +80,8 @@ public class OracleDialect extends Database {
         Another option: "SELECT %s FROM ( SELECT %s FROM %s.%s ORDER BY DBMS_RANDOM.VALUE ) WHERE ROWNUM < %d"
         */
 
-        int val = Integer.parseInt(getUnsignedInteger().nextValue()) % 2;
-        String sortOrder;
-        if (val == 0)
-            sortOrder = "ASC";
-        else sortOrder = "DESC";
-
         return String.format("SELECT * FROM (SELECT %s FROM %s.%s ORDER BY %s %s) WHERE ROWNUM < %d",
-                keyColumnNames, schemaName, tableName, quoteName(getDbRandom()), sortOrder, limit+1);
+                keyColumnNames, schemaName, tableName, quoteName(getDbRandom()), randomSortOrder(), limit+1);
     }
 
     /**
@@ -218,11 +217,11 @@ public class OracleDialect extends Database {
             String message;
             if (exception.contains("not found")) {
                 rval = true;
-                message = String.format("Table %s was not found: %s", table.getName(), e.getMessage());
+                message = String.format("Oracle able %s was not found: %s", table.getName(), e.getMessage());
 
             } else {
                 rval = false;
-                message = String.format("Failed to drop table %s: %s", table.getName(), e.getMessage());
+                message = String.format("Failed to drop Oracle table %s: %s", table.getName(), e.getMessage());
             }
             outputBuffer.addLine(OutputBuffer.Priority.WARNING, message);
             LOG.warn(message);
@@ -259,7 +258,6 @@ public class OracleDialect extends Database {
             // no key columns specified, so add auto incrementing primary key
             query = String.format("%s %s, ", query, autoIncrementPrimaryKey(quoteName(defaultKeyColumn)));
         }
-
 
         for (Column column : columns) {
             query = String.format("%s%s %s %s %s", query, sep, quoteName(column.getName()), column.getDatabaseType(),

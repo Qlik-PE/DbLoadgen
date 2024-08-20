@@ -19,8 +19,8 @@ import com.google.common.collect.*;
 import java.util.*;
 
 public final class IniFileProperties {
-  private Map<String, Map<String, String>> sectionProperties = Maps.newLinkedHashMap();
-  private Map<String, String> defaultProperties = Maps.newLinkedHashMap();
+  final private Map<String, Map<String, String>> sectionProperties = Maps.newLinkedHashMap();
+  final private Map<String, String> defaultProperties = Maps.newLinkedHashMap();
 
   public Map<String, String> getDefaultProperties() {
     return defaultProperties;

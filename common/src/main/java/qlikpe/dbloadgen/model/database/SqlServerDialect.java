@@ -37,6 +37,11 @@ public class SqlServerDialect extends Database {
         super();
         LOG.trace("SqlServerDialect() constructor: Database Type: {}", databaseType);
         setDatabaseType(databaseType);
+        setSupportsExists(false);
+        setSupportsCascade(false);
+        setAlterTableColumnKeyword(false);
+        setSupportsUnsignedInts(false);
+        setQuoteChar('"');
     }
 
     @Override
@@ -47,15 +52,9 @@ public class SqlServerDialect extends Database {
     @Override
     public String selectRandomRows(String keyColumnNames, String schemaName, String tableName, int limit) {
         // more random, less efficient option: "SELECT TOP %d %s FROM %s.%s ORDER BY NEWID()"
-        int val = Integer.parseInt(getUnsignedInteger().nextValue()) % 2;
-        String sortOrder;
-        if (val == 0)
-            sortOrder = "ASC";
-        else sortOrder = "DESC";
 
         return String.format("SELECT TOP %d %s FROM %s.%s ORDER BY %s %s",
-                limit, keyColumnNames, schemaName, tableName, quoteName(getDbRandom()), sortOrder);
-
+                limit, keyColumnNames, schemaName, tableName, quoteName(getDbRandom()), randomSortOrder());
     }
 
     /**
@@ -98,7 +97,7 @@ public class SqlServerDialect extends Database {
 
         /*
          * Dropping a table will fail if that table is marked for replication. This "pre-drop" step
-         * attempts to unmark the table so we can drop it without affecting other replication-related
+         * attempts to unmark the table to allow us to drop it without affecting other replication-related
          * settings.
          *
          * See: https://pawjershauge.blogspot.com/2012/06/spmsunmarkreplinfo-transact-sql.html
@@ -136,11 +135,10 @@ public class SqlServerDialect extends Database {
             String message;
             if (exception.contains("not found")) {
                 rval = true;
-                message = String.format("Table %s was not found: %s", table.getName(), e.getMessage());
-
+                message = String.format("SQL Server table %s was not found: %s", table.getName(), e.getMessage());
             } else {
                 rval = false;
-                message = String.format("Failed to drop table %s: %s", table.getName(), e.getMessage());
+                message = String.format("Failed to drop SQL Server table %s: %s", table.getName(), e.getMessage());
             }
             outputBuffer.addLine(OutputBuffer.Priority.WARNING, message);
             LOG.warn(message);
