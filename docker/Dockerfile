@@ -1,6 +1,8 @@
-FROM openjdk:12.0.1-jdk-oraclelinux7
+FROM rockylinux:9
 
 ARG installfile=file_not_set
+
+RUN dnf install -y java-11-openjdk java-11-openjdk-devel
 
 ADD dbloadgen-entry.sh /
 
