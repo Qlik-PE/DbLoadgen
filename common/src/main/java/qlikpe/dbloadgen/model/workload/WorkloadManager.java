@@ -209,7 +209,7 @@ public class WorkloadManager {
                     break;
                 default:
                     asyncWait.set(true);  // always run synchronously
-                    LOG.error("Unrecognized command: " + command);
+                    LOG.error("Unrecognized command: {}", command);
             }
             executingCommand.set(false);
         });
@@ -251,7 +251,7 @@ public class WorkloadManager {
 
                 int failures = 0;
                 int completed = 0;
-                if (tables.size() == 0)
+                if (tables.isEmpty())
                     LOG.error("initSchema(): No tables defined to initialize");
                 else LOG.debug("initSchema: initializing {} tables", tables.size());
                 for (Table table : tables) {
@@ -604,6 +604,8 @@ public class WorkloadManager {
         batchSleep = workloadConfig.getWorkerBatchSleep();
         threadSleep = workloadConfig.getWorkerThreadSleep();
         workers = workloadConfig.getWorkerThreads();
+
+        dbLoadgenProperties.printProperties("Workload Info", workloadConfig.getAsProperties());
     }
 
     private boolean readTableInfo() {

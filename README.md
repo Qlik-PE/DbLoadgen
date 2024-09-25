@@ -36,7 +36,7 @@ This image represents a high-level view of the object model for the workload man
 
 ![DbLoadgen Object Model](./images/object-model.png) 
 
-This image represents a the DbLoadgen process architecture as it relates to 
+This image represents the DbLoadgen process architecture as it relates to 
 interacting with a target database.
 
 ![DbLoadgen Process Architecture](./images/dbloadgen-architecture.png) 
@@ -68,6 +68,7 @@ section identifies a list of tables that should be part of the test.
 
 ```yaml
 !!qlikpe.dbloadgen.model.workload.WorkloadConfig
+name: myname
 dataset: test           
 schema: myschema        
 duration: 1
@@ -94,14 +95,17 @@ tables:
      preload: data
      updateColumns: "active,NAassoc"
    - name: table3
-     preload: 21
+     preload: "21"
      updateColumns: "active"
 ```
 
 * **dataset**: the name of the subdirectory where the table metadata can be found
 * **schema**: the name of the schema in the target database where the tables
 should be created.
-* **duration**: the number of **minutes** that the workload should run after initialization.
+* **duration**: 
+  * \> 0: the number of **minutes** that the workload should run after initialization.
+  * < 0: the number of **days** that the workload should run after initialization.
+  * 0: use the default duration of 10 minutes.
 * **workerThreads**: the number of independent threads to spin up for generating load during
 the test.
 * **preloadThreads**: the number of threads to have running in parallel during database
@@ -238,7 +242,7 @@ must be specified.
 be nullable. This field is optional.
   * **initializer**: the type of initializer that should be associated with this column.
 Initializers generate values to assign to the columns when rows are inserted, or
-when update operations are executed. See *Column Initializers* below). Specification of
+when update operations are executed. See *Column Initializers* below. Specification of
 an initializer for a column is optional. If you do not specify one, DbLoadgen will use
 a default initializer specific to that column's data type.
 * **keyColumns**: a YAML list of column names that will make up the primary key for the table.
@@ -547,13 +551,18 @@ see the outcome of the execution.
 
 ## Using Docker
 
-The DbLoadgen server is naturally well-suited to being executed in a Docker container.
+The both the DbLoadgen server and CLI are naturally well-suited to being 
+executed in a Docker container. 
 
 ### Public Image
 
 You can find a public image here:
 
 https://hub.docker.com/repository/docker/attunitypm/dbloadgen
+
+By default, this image executes the DbLoadgen server. You can override 
+this behavior by specifying the command "cli" as the first argument. 
+See the docker compose example for running the CLI below.
 
 ### Execute Docker from the command line
 
@@ -590,18 +599,18 @@ To use the provided workloads and datasets, you can simply deploy the public ima
 version: '3.0'
 services:
 
-   dbloadgen:
-      image: attunitypm/dbloadgen:latest
-      container_name: dbloadgen
-      environment:
-         - PASSWORD=admin
-         - GUIUSER=admin
-         - PORT=9090
-         - DATASETS=./datasets   # change to /datasets if you mount a datasets volume
-      tty: true
-      stdin_open: true
-      ports:
-         - 9090:9090
+  dbloadgen:
+    image: attunitypm/dbloadgen:latest
+    container_name: dbloadgen
+    environment:
+      - PASSWORD=admin
+      - GUIUSER=admin
+      - PORT=9090
+      - DATASETS=./datasets   # change to /datasets if you mount a datasets volume
+    tty: true
+    stdin_open: true
+    ports:
+      - "9090:9090"
 ```
 
 #### Use Your Own Datasets and Workloads
@@ -611,22 +620,55 @@ To use your own workloads and datasets, you will need to mount an external datas
 version: '3.0'
 services:
 
+  dbloadgen:
+    image: attunitypm/dbloadgen:latest
+    container_name: dbloadgen
+    environment:
+      - PASSWORD=admin
+      - GUIUSER=admin
+      - PORT=9090
+      - DATASETS=/datasets   # change to /datasets if you mount a datasets volume
+    tty: true
+    stdin_open: true
+    ports:
+      - "9090:9090"
+    volumes:
+      - /path/to/your/datasets:/datasets
+```
+### Running the CLI in Docker
+
+This is an example of how you would execute the DbLoadgen CLI 
+instead of the server when using *docker compose*. Note how we override
+the default COMMAND with *cli* and specify the workload and connection
+information in the commandline arguments.
+
+```yaml
+##
+## Spin up the "dbloadgen" cli image. 
+##
    dbloadgen:
       image: attunitypm/dbloadgen:latest
-      container_name: dbloadgen
+      container_name: dbloadgencli
+      depends_on:
+         mysql:
+            condition: service_healthy
       environment:
-         - PASSWORD=admin
-         - GUIUSER=admin
-         - PORT=9090
          - DATASETS=/datasets   # change to /datasets if you mount a datasets volume
-      tty: true
-      stdin_open: true
-      ports:
-         - 9090:9090
+      command: [ "cli",
+                 "--user", "root",
+                 "--password", "AttunityAdmin123",
+                 "--url", "jdbc:mysql://mysqldb:3306",
+                 "--jdbc-driver", "com.mysql.cj.jdbc.Driver",
+                 "--database-type", "mysql",
+                 "--workload-config", "testdrive",
+                 "end-to-end"
+               ]
+      restart: "no"
       volumes:
-         - /path/to/your/datasets:/datasets
+       - ./datasets:/datasets
+      networks:
+         - replnet
 ```
-
 
 ## Building DbLoadgen
 

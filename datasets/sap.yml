@@ -1,4 +1,5 @@
 !!qlikpe.dbloadgen.model.workload.WorkloadConfig
+name: sap
 dataset: sap
 schema: sap
 duration: 2
