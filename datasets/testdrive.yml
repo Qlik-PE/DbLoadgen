@@ -1,0 +1,98 @@
+!!qlikpe.dbloadgen.model.workload.WorkloadConfig
+name: testdrive
+dataset: baseball
+schema: baseball
+duration: -14
+workerThreads: 1
+preloadThreads: 2
+preloadBatchSize: 500
+workerBatchSize: 100
+workerBatchSleep: 50
+workerThreadSleep: 6
+allTablesAllThreads: false
+operationPct:
+   insert: 15
+   update: 70
+   delete: 15
+tables:
+   - name: AllstarFull
+     preload: data
+     updateColumns: "gameNum,GP"
+   - name: Appearances
+     preload: data
+     updateColumns: "G_all,GS"
+   - name: AwardsManagers
+     preload: data
+     updateColumns: "notes"
+   - name: AwardsPlayers
+     preload: data
+     updateColumns: "notes"
+   - name: AwardsShareManagers
+     preload: data
+     updateColumns: "votesFirst"
+   - name: AwardsSharePlayers
+     preload: data
+     updateColumns: "votesFirst"
+   - name: BattingPost
+     preload: data
+     updateColumns: "G,AB,R"
+   - name: Batting
+     preload: data
+     updateColumns: "G,AB,R"
+   - name: CollegePlaying
+     preload: data
+     updateColumns: "yearID"
+   - name: FieldingOFsplit
+     preload: data
+     updateColumns: "GS,InnOuts,PO"
+   - name: FieldingOF
+     preload: data
+     updateColumns: "Glf,Gcf"
+   - name: FieldingPost
+     preload: data
+     updateColumns: "G,GS,InnOuts"
+   - name: Fielding
+     preload: data
+     updateColumns: "G,GS,InnOuts"
+   - name: HallOfFame
+     preload: data
+     updateColumns: "votes,inducted"
+   - name: HomeGames
+     preload: data
+     updateColumns: "games,openings"
+   - name: ManagersHalf
+     preload: data
+     updateColumns: "G,W,L"
+   - name: Managers
+     preload: data
+     updateColumns: "G,W,L"
+   - name: Parks
+     preload: data
+     updateColumns: "country"
+   - name: PitchingPost
+     preload: data
+     updateColumns: "W,L"
+   - name: Pitching
+     preload: data
+     updateColumns: "W,L"
+   - name: Player
+     preload: data
+     updateColumns: "deathCountry"
+   - name: Salaries
+     preload: data
+     updateColumns: "salary"
+   - name: Schools
+     preload: data
+     updateColumns: "country"
+   - name: SeriesPost
+     preload: data
+     updateColumns: "wins,losses"
+   - name: TeamsFranchises
+     preload: data
+     updateColumns: "active,NAassoc"
+   - name: TeamsHalf
+     preload: data
+     updateColumns: "G,W,L"
+   - name: Teams
+     preload: data
+     updateColumns: "G,W,L"

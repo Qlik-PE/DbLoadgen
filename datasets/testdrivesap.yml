@@ -1,0 +1,98 @@
+!!qlikpe.dbloadgen.model.workload.WorkloadConfig
+name: testdrivesap
+dataset: sap
+schema: sap
+duration: -14
+workerThreads: 1
+preloadThreads: 2
+preloadBatchSize: 500
+workerBatchSize: 100
+workerBatchSleep: 50
+workerThreadSleep: 6
+allTablesAllThreads: false
+operationPct:
+   insert: 15
+   update: 70
+   delete: 15
+tables:
+   - name: 0customer_attr
+     preload: data
+     updateColumns: "MANDT,ADRNR,ANRED,AUFSD"
+   - name: 0customer_text
+     preload: data
+     updateColumns: "MANDT,TXTMD"
+   - name: 0employee_attr
+     preload: data
+     updateColumns: "ENDDA,BUKRS,WERKS,BTRTL"
+   - name: 0fi_ar_4
+     preload: data
+     updateColumns: "STATUSPS,KUNNR,KKBER,MABER"
+   - name: 0material_attr
+     preload: data
+     updateColumns: "MANDT,ERSDA,ERNAM,LAEDA"
+   - name: 0material_text
+     preload: data
+     updateColumns: ""
+   - name: 0matl_cat_text
+     preload: data
+     updateColumns: ""
+   - name: 0matl_group_text
+     preload: data
+     updateColumns: "DATETO,DATEFROM,TXTMD,TXTLG"
+   - name: 0recipcntry_text
+     preload: data
+     updateColumns: "DATETO,DATEFROM,TXTMD,TXTLG"
+   - name: 0salesoffice_org_attr
+     preload: data
+     updateColumns: ""
+   - name: 0sales_off_text
+     preload: data
+     updateColumns: "DATETO,DATEFROM,TXTMD,TXTLG"
+   - name: 0salesorg_text
+     preload: data
+     updateColumns: "DATETO,DATEFROM,TXTMD,TXTLG"
+   - name: 2lis_11_vahdr
+     preload: data
+     updateColumns: "ANGDT,AUART,BNDDT,KUNNR"
+   - name: 2lis_11_vaitm
+     preload: data
+     updateColumns: "UVALL,UVFAK,UVPRS,UVVLK"
+   - name: 2lis_11_vakon
+     preload: data
+     updateColumns: "UVPRS,AUART,AUGRU,BUKRS"
+   - name: 2lis_11_vascl
+     preload: data
+     updateColumns: "UVALL,UVFAK,UVPRS,UVVLK"
+   - name: 2lis_11_vasth
+     preload: data
+     updateColumns: "BESTK,FKSAK,FKSTK,GBSTK"
+   - name: 2lis_11_vasti
+     preload: data
+     updateColumns: "BESTA,FKSAA,FKSTA,GBSTA"
+   - name: 2lis_11_v_itm
+     preload: data
+     updateColumns: "BUKRS,FAKSK,HWAER,KUNNR"
+   - name: 2lis_11_v_scl
+     preload: data
+     updateColumns: "ABSTA,BMENG,EDATU"
+   - name: 2lis_11_v_ssl
+     preload: data
+     updateColumns: "WMENG,BMENG,VSMNG,VRKME"
+   - name: 2lis_12_vchdr
+     preload: data
+     updateColumns: "ABLAD,BTGEW,BUKRS,BZIRK"
+   - name: 2lis_12_vcitm
+     preload: data
+     updateColumns: "WBSTA,ABLAD,BUKRS,BZIRK"
+   - name: 2lis_13_vdhdr
+     preload: data
+     updateColumns: "BUKRS,BZIRK,ERDAT,FKART"
+   - name: 2lis_13_vditm
+     preload: data
+     updateColumns: "AEDAT,BUKRS,BZIRK,FKART"
+   - name: 2lis_13_vdkon
+     preload: data
+     updateColumns: "AEDAT,BUKRS,BZIRK,FKART,FKDAT"
+   - name: ztcurr_attr
+     preload: data
+     updateColumns: "FCURR,TCURR,GDATU,UKURS"
