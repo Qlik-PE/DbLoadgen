@@ -14,6 +14,7 @@
 package qlikpe.dbloadgen.model.database;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import qlikpe.dbloadgen.model.initializer.UnsignedInteger;
@@ -37,11 +38,50 @@ public abstract class Database {
     protected static final String defaultKeyColumn = "id_";
     private static final String dbRandom = "dbrandom";
     private static final String randomType = "integer";
+    /**
+     * -- SETTER --
+     *  Set the database type.
+     * -- GETTER --
+     *  Return the type of database we are mapping to as a String.
+     */
+    @Getter
+    @Setter
     private String databaseType;
+    /**
+     * -- SETTER --
+     *  Indicates whether this database dialect supports EXISTS subclauses.
+     */
+    @Setter
     private boolean supportsExists;
-    private boolean supportsCascade;
+    /**
+     * -- SETTER --
+     *  Indicates whether this database dialect supports CASCADE subclauses.
+     */
+    @Setter
+    private boolean supportsDropTableCascade;
+    @Setter
+    private boolean supportsDropSchemaCascade = false;
+    /**
+     * -- SETTER --
+     *  Indicates whether this database requires the COLUMN keyword in ALTER TABLE statements.
+     */
+    @Setter
     private boolean alterTableColumnKeyword;
+    /**
+     * -- SETTER --
+     *  Indicates whether this database supports unsigned integer types.
+     */
+    @Setter
     private boolean supportsUnsignedInts;
+    /**
+     * -- GETTER --
+     *  Get the character used to surround identifiers.
+     *  returns the quote character as a character.
+     * -- SETTER --
+     *  Set the character to wrap column and table names with.
+     */
+    @Setter
+    @Getter
     private char quoteChar;
     private final UnsignedInteger unsignedInteger = new UnsignedInteger(0, 200000);
 
@@ -71,7 +111,7 @@ public abstract class Database {
                 break;
             case "postgres":
             case "postgresql":
-                database = new PostgresDialect("PostgreSQL");
+                database = new PostgresDialect("Postgres");
                 break;
             case "oracle":
                 database = new OracleDialect("Oracle");
@@ -94,72 +134,10 @@ public abstract class Database {
     public String getDbRandom() { return dbRandom; }
 
     /**
-     * Return the type of database we are mapping to as a String.
-     *
-     * @return the database type.
-     */
-    public String getDatabaseType() {
-        return databaseType;
-    }
-
-    /**
-     * Set the database type.
-     *
-     * @param databaseType the database type.
-     */
-    public void setDatabaseType(String databaseType) {
-        this.databaseType = databaseType;
-    }
-
-    /**
-     * Indicates whether this database dialect supports EXISTS subclauses.
-     *
-     * @param supportsExists true if EXISTS is supported, false otherwise.
-     */
-    public void setSupportsExists(boolean supportsExists) {
-        this.supportsExists = supportsExists;
-    }
-
-    /**
-     * Indicates whether this database dialect supports CASCADE subclauses.
-     *
-     * @param supportsCascade true if CASCADE is supported, false otherwise.
-     */
-    public void setSupportsCascade(boolean supportsCascade) {
-        this.supportsCascade = supportsCascade;
-    }
-
-    /**
      * Indicates whether this database supports unsigned integer types.
-     *
-     * @param supportsUnsignedInts true if unsigned integer types are supported, false otherwise.
-     */
-    public void setSupportsUnsignedInts(boolean supportsUnsignedInts) {
-        this.supportsUnsignedInts = supportsUnsignedInts;
-    }
-
-    /**
-     * Indicates whether this database supports unsigned integer types.
-     *
      * returns true if unsigned integer types are supported, false otherwise.
      */
     public boolean getSupportsUnsignedInts() { return supportsUnsignedInts; }
-
-    /**
-     * Set the character to wrap column and table names with.
-     *
-     * @param quoteChar the character to use to surround database identifiers.
-     */
-    public void setQuoteChar(char quoteChar) {
-        this.quoteChar = quoteChar;
-    }
-
-    /**
-     * Get the character used to surround identifiers.
-     *
-     * returns the quote character as a character.
-     */
-    public char getQuoteChar() { return quoteChar; }
 
     /**
      * Surround a database identifier with the quote character specific to this database.
@@ -170,16 +148,6 @@ public abstract class Database {
         return String.format("%c%s%c", quoteChar, name, quoteChar);
     }
 
-
-
-    /**
-     * Indicates whether this database requires the COLUMN keyword in ALTER TABLE statements..
-     *
-     * @param alterTableColumnKeyword true if COLUMN is required, false otherwise.
-     */
-    public void setAlterTableColumnKeyword(boolean alterTableColumnKeyword) {
-        this.alterTableColumnKeyword = alterTableColumnKeyword;
-    }
 
     /**
      * Extracts the column names and values from the result set returned from a query.
@@ -252,13 +220,13 @@ public abstract class Database {
             Statement stmt = connection.createStatement();
             stmt.execute(query);
             outputBuffer.addLine(OutputBuffer.Priority.INFO, "created schema " + schemaName);
-            LOG.debug("create schema succeeded: " + query);
+            LOG.debug("create schema succeeded: {}", query);
             stmt.close();
             rval = true;
         } catch (SQLException e) {
             String message = String.format("Failed to create schema %s: %s", schemaName, e.getMessage());
             outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
-            LOG.error("Failed to create schema: " + query, e);
+            LOG.error("Failed to create schema: {}", query, e);
             rval = false;
         }
 
@@ -279,8 +247,8 @@ public abstract class Database {
         String query;
 
         if (supportsExists)
-            query = String.format("DROP SCHEMA IF EXISTS %s %s", quoteName(schemaName), supportsCascade ? "CASCADE" : "");
-        else query = String.format("DROP SCHEMA %s %s", quoteName(schemaName), supportsCascade ? "CASCADE" : "");
+            query = String.format("DROP SCHEMA IF EXISTS %s %s", quoteName(schemaName), supportsDropSchemaCascade ? "CASCADE" : "");
+        else query = String.format("DROP SCHEMA %s %s", quoteName(schemaName), supportsDropSchemaCascade ? "CASCADE" : "");
 
 
         try {
@@ -288,7 +256,7 @@ public abstract class Database {
             stmt.execute(query);
             rval = true;
             outputBuffer.addLine(OutputBuffer.Priority.INFO, "successfully dropped schema " + schemaName);
-            LOG.debug("drop schema succeeded: " + query);
+            LOG.debug("drop schema succeeded: {}", query);
             stmt.close();
         } catch (SQLException e) {
             String exception = e.getMessage().toLowerCase();
@@ -324,10 +292,10 @@ public abstract class Database {
         if (supportsExists)
             query = String.format("DROP TABLE IF EXISTS %s.%s %s",
                     quoteName(table.getSchemaName()), quoteName(table.getName()),
-                    supportsCascade ? "CASCADE" : "");
+                    supportsDropTableCascade ? "CASCADE" : "");
         else query = String.format("DROP TABLE %s.%s %s",
                 quoteName(table.getSchemaName()), quoteName(table.getName()),
-                supportsCascade ? "CASCADE" : "");
+                supportsDropTableCascade ? "CASCADE" : "");
 
 
         try {
@@ -335,7 +303,7 @@ public abstract class Database {
             stmt.execute(query);
             rval = true;
             outputBuffer.addLine(OutputBuffer.Priority.INFO, "dropped table " + table.getName());
-            LOG.debug("drop table succeeded: " + query);
+            LOG.debug("drop table succeeded: {}", query);
             stmt.close();
         } catch (SQLException e) {
             String exception = e.getMessage().toLowerCase();
@@ -412,14 +380,14 @@ public abstract class Database {
             stmt.execute(query);
             message = String.format("created table %s.%s", table.getSchemaName(), table. getName());
             outputBuffer.addLine(OutputBuffer.Priority.INFO, message);
-            LOG.debug("create table succeeded: " + query);
+            LOG.debug("create table succeeded: {}", query);
             stmt.close();
             rval = true;
         } catch (SQLException e) {
             message = String.format("Failed to create table %s.%s message=%s",
                     table.getSchemaName(), table.getName(), e.getMessage());
             outputBuffer.addLine(OutputBuffer.Priority.ERROR, message);
-            LOG.error("Failed to create table: " + query, e);
+            LOG.error("Failed to create table: {}", query, e);
             rval = false;
         }
 
@@ -431,7 +399,7 @@ public abstract class Database {
      *
      * @param connection  the database connection to use.
      * @param table       the table we will create the index on.
-     * @param columnNames a comma delimited list of column names.
+     * @param columnNames a comma-delimited list of column names.
      */
     public void createIndex(Connection connection, Table table, String columnNames) {
         String query;
@@ -453,10 +421,10 @@ public abstract class Database {
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(query);
-            LOG.debug("create index succeeded: " + query);
+            LOG.debug("create index succeeded: {}", query);
             stmt.close();
         } catch (SQLException e) {
-            LOG.error("Failed to create index: " + query, e);
+            LOG.error("Failed to create index: {}", query, e);
         }
     }
 
@@ -478,10 +446,10 @@ public abstract class Database {
         try {
             Statement stmt = connection.createStatement();
             stmt.execute(query);
-            LOG.debug("add column succeeded: " + query);
+            LOG.debug("add column succeeded: {}", query);
             stmt.close();
         } catch (SQLException e) {
-            LOG.error("Failed to add column: " + query, e);
+            LOG.error("Failed to add column: {}", query, e);
         }
     }
 
@@ -506,7 +474,7 @@ public abstract class Database {
             stmt.close();
             //LOG.debug(String.format("Table %s.%s row count: %d", table.getSchemaName(), table.getName(), rowCount));
         } catch (SQLException e) {
-            LOG.error("unable to count rows: " + query, e);
+            LOG.error("unable to count rows: {}", query, e);
             rowCount = -1;
         }
 
@@ -529,7 +497,7 @@ public abstract class Database {
         LinkedList<List<ColumnValue>> randomRows = null;
 
         // get the key columns
-        if ((keyColumns != null) && (keyColumns.size() > 0)) {
+        if ((keyColumns != null) && (!keyColumns.isEmpty())) {
             sep = "";
             for (String columnName : keyColumns) {
                 keyColumnNames = String.format("%s%s %s", keyColumnNames, sep, quoteName(columnName));
@@ -545,13 +513,13 @@ public abstract class Database {
             Statement stmt = connection.createStatement();
             rs = stmt.executeQuery(query);
             randomRows = getRowValues(rs);
-            if ((randomRows == null) || (randomRows.size() == 0)) {
+            if ((randomRows == null) || (randomRows.isEmpty())) {
                 LOG.info("failed to allocate random rows for table: {}", tableName);
             }
             rs.close();
-            LOG.trace(String.format("got random rows for table %s.%s", schemaName, tableName));
+            LOG.trace("got random rows for table {}.{}", schemaName, tableName);
         } catch (SQLException e) {
-            LOG.error("unable to get random rows: " + query, e);
+            LOG.error("unable to get random rows: {}", query, e);
         }
 
 
@@ -622,7 +590,7 @@ public abstract class Database {
         String sep = "";
         String setClause = "";
 
-        if ((updateColumnNames == null) || (updateColumnNames.size() == 0)) {
+        if ((updateColumnNames == null) || (updateColumnNames.isEmpty())) {
             LOG.error("table {} does not have update columns specified. Aborting operation", tableName);
             return;
         }

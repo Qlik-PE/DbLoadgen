@@ -39,7 +39,7 @@ public class OracleDialect extends Database {
         LOG.trace("OracleDialect() constructor: Database Type: {}", databaseType);
         setDatabaseType(databaseType);
         setSupportsExists(false);
-        setSupportsCascade(false);
+        setSupportsDropTableCascade(false);
         setAlterTableColumnKeyword(false);
         setSupportsUnsignedInts(false);
         setQuoteChar('"');

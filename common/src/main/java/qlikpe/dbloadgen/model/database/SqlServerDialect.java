@@ -38,7 +38,7 @@ public class SqlServerDialect extends Database {
         LOG.trace("SqlServerDialect() constructor: Database Type: {}", databaseType);
         setDatabaseType(databaseType);
         setSupportsExists(false);
-        setSupportsCascade(false);
+        setSupportsDropTableCascade(false);
         setAlterTableColumnKeyword(false);
         setSupportsUnsignedInts(false);
         setQuoteChar('"');

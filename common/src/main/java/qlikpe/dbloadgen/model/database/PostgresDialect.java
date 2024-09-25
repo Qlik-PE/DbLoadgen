@@ -17,7 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
- * A class that interfaces with PostgreSQL and databases whose
+ * A class that interfaces with Postgres and databases whose
  * SQL syntax for the operations we require are compatible.
  */
 public class PostgresDialect extends Database {
@@ -31,7 +31,8 @@ public class PostgresDialect extends Database {
         LOG.debug("PostgresDialect() constructor: Database Type: {}", databaseType);
         setDatabaseType(databaseType);
         setSupportsExists(true);
-        setSupportsCascade(true);
+        setSupportsDropSchemaCascade(true);
+        setSupportsDropTableCascade(true);
         setAlterTableColumnKeyword(true);
         setSupportsUnsignedInts(false);
         setQuoteChar('"');
@@ -52,7 +53,7 @@ public class PostgresDialect extends Database {
 
 
     /**
-     * Set the data type mappings for PostgreSQL.
+     * Set the data type mappings for Postgres.
      * @param dataTypeMapper an instance of DataTypeMapper.
      */
     @Override

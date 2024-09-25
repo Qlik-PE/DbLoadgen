@@ -31,7 +31,7 @@ public class MySqlDialect extends Database {
         LOG.trace("MySqlDialect() constructor: Database Type: {}", databaseType);
         setDatabaseType(databaseType);
         setSupportsExists(true);
-        setSupportsCascade(true);
+        setSupportsDropTableCascade(true);
         setAlterTableColumnKeyword(true);
         setSupportsUnsignedInts(true);
         setQuoteChar('`');
